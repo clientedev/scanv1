@@ -1,0 +1,15 @@
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+.pythonlibs
+.cache
+.upm
+.replit
+replit.nix
+.local
+attached_assets
+*.md
+.env
+.env.example
