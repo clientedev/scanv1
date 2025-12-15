@@ -144,26 +144,27 @@ class EmbeddingEngine:
     
     def add_image_to_class(self, class_name: str, image_bytes: bytes, filename: str) -> str:
         """Add a new image to a class and update embeddings"""
+        import uuid
+        import re
+        
         if class_name not in OFFICIAL_CLASSES:
             raise ValueError(f"Unknown class: {class_name}")
         
         class_dir = os.path.join(DATASET_DIR, class_name)
         os.makedirs(class_dir, exist_ok=True)
         
-        base_name = os.path.splitext(filename)[0]
-        ext = os.path.splitext(filename)[1] or '.jpg'
+        safe_filename = os.path.basename(filename)
+        safe_filename = re.sub(r'[^\w\-.]', '_', safe_filename)
         
-        counter = 0
-        while True:
-            if counter == 0:
-                new_filename = f"{base_name}{ext}"
-            else:
-                new_filename = f"{base_name}_{counter}{ext}"
-            
-            new_path = os.path.join(class_dir, new_filename)
-            if not os.path.exists(new_path):
-                break
-            counter += 1
+        base_name = os.path.splitext(safe_filename)[0] or 'image'
+        ext = os.path.splitext(safe_filename)[1] or '.jpg'
+        
+        if ext.lower() not in {'.jpg', '.jpeg', '.png', '.bmp', '.webp'}:
+            ext = '.jpg'
+        
+        unique_id = uuid.uuid4().hex[:8]
+        new_filename = f"{base_name}_{unique_id}{ext}"
+        new_path = os.path.join(class_dir, new_filename)
         
         from io import BytesIO
         image = Image.open(BytesIO(image_bytes)).convert("RGB")
