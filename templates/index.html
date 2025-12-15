@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scanner de Sucata Eletronica</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            color: #fff;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 2px solid #0f3460;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #e94560;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 900px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: rgba(15, 52, 96, 0.5);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid #0f3460;
+        }
+
+        .panel-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: #e94560;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .camera-container {
+            position: relative;
+            width: 100%;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            aspect-ratio: 4/3;
+        }
+
+        #video, #canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        #canvas {
+            display: none;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.7);
+            color: #94a3b8;
+        }
+
+        .camera-overlay.hidden {
+            display: none;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #e94560;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #ff6b6b;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #0f3460;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #1a4a7a;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result-box {
+            background: rgba(233, 69, 96, 0.1);
+            border: 2px solid #e94560;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .result-box.hidden {
+            display: none;
+        }
+
+        .result-classification {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #4ade80;
+            margin-bottom: 10px;
+        }
+
+        .result-confidence {
+            font-size: 1.2rem;
+            color: #fbbf24;
+            margin-bottom: 15px;
+        }
+
+        .top-matches {
+            margin-top: 15px;
+        }
+
+        .top-matches h4 {
+            color: #94a3b8;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .match-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: rgba(15, 52, 96, 0.5);
+            border-radius: 5px;
+            margin-bottom: 5px;
+        }
+
+        .match-name {
+            color: #e2e8f0;
+        }
+
+        .match-score {
+            color: #4ade80;
+            font-weight: 500;
+        }
+
+        .upload-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #0f3460;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #94a3b8;
+        }
+
+        .form-group select, .form-group input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #0f3460;
+            background: #16213e;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .class-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .class-item {
+            background: rgba(15, 52, 96, 0.5);
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .class-name {
+            font-weight: 500;
+            color: #e2e8f0;
+        }
+
+        .class-count {
+            background: #e94560;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .status-message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .status-message.success {
+            display: block;
+            background: rgba(74, 222, 128, 0.2);
+            border: 1px solid #4ade80;
+            color: #4ade80;
+        }
+
+        .status-message.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #0f3460;
+            border-top-color: #e94560;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: #0f3460;
+            border: none;
+            border-radius: 8px 8px 0 0;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: #e94560;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .no-dataset-warning {
+            background: rgba(251, 191, 36, 0.2);
+            border: 1px solid #fbbf24;
+            color: #fbbf24;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Scanner de Sucata Eletronica</h1>
+            <p class="subtitle">Sistema de classificacao por similaridade de imagem usando IA</p>
+        </header>
+
+        <div class="main-content">
+            <div class="panel">
+                <h2 class="panel-title">Camera Scanner</h2>
+                
+                <div class="camera-container">
+                    <video id="video" autoplay playsinline></video>
+                    <canvas id="canvas"></canvas>
+                    <div class="camera-overlay" id="cameraOverlay">
+                        Clique em "Iniciar Camera" para comecar
+                    </div>
+                </div>
+
+                <div class="controls">
+                    <button class="btn btn-primary" id="startCamera">Iniciar Camera</button>
+                    <button class="btn btn-primary" id="captureBtn" disabled>Capturar e Classificar</button>
+                    <button class="btn btn-secondary" id="stopCamera" disabled>Parar Camera</button>
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Processando imagem...</p>
+                </div>
+
+                <div class="result-box hidden" id="resultBox">
+                    <div class="result-classification" id="resultClass">-</div>
+                    <div class="result-confidence">Confianca: <span id="resultScore">0</span>%</div>
+                    <div class="top-matches">
+                        <h4>Top 3 Classificacoes:</h4>
+                        <div id="topMatches"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="tabs">
+                    <button class="tab active" data-tab="dataset">Dataset</button>
+                    <button class="tab" data-tab="upload">Upload</button>
+                </div>
+
+                <div class="tab-content active" id="datasetTab">
+                    <h2 class="panel-title">Classificacoes Disponiveis</h2>
+                    <div id="noDatasetWarning" class="no-dataset-warning hidden">
+                        Nenhuma imagem no dataset. Adicione imagens para treinar o sistema.
+                    </div>
+                    <div class="class-list" id="classList"></div>
+                    <div class="controls" style="margin-top: 20px;">
+                        <button class="btn btn-secondary" id="refreshClasses">Atualizar Lista</button>
+                        <button class="btn btn-secondary" id="retrainBtn">Retreinar Embeddings</button>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="uploadTab">
+                    <h2 class="panel-title">Adicionar ao Dataset</h2>
+                    <div class="form-group">
+                        <label for="uploadClass">Classificacao:</label>
+                        <select id="uploadClass"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="uploadImage">Imagem:</label>
+                        <input type="file" id="uploadImage" accept="image/*">
+                    </div>
+                    <button class="btn btn-primary" id="uploadBtn">Enviar Imagem</button>
+                    <div class="status-message" id="uploadStatus"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const startCameraBtn = document.getElementById('startCamera');
+        const stopCameraBtn = document.getElementById('stopCamera');
+        const captureBtn = document.getElementById('captureBtn');
+        const cameraOverlay = document.getElementById('cameraOverlay');
+        const resultBox = document.getElementById('resultBox');
+        const loading = document.getElementById('loading');
+
+        let stream = null;
+
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+                });
+                video.srcObject = stream;
+                cameraOverlay.classList.add('hidden');
+                startCameraBtn.disabled = true;
+                stopCameraBtn.disabled = false;
+                captureBtn.disabled = false;
+            } catch (err) {
+                console.error('Error accessing camera:', err);
+                cameraOverlay.textContent = 'Erro ao acessar camera: ' + err.message;
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            video.srcObject = null;
+            cameraOverlay.classList.remove('hidden');
+            cameraOverlay.textContent = 'Camera desligada';
+            startCameraBtn.disabled = false;
+            stopCameraBtn.disabled = true;
+            captureBtn.disabled = true;
+        }
+
+        async function captureAndClassify() {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+            
+            loading.classList.add('active');
+            resultBox.classList.add('hidden');
+            
+            canvas.toBlob(async (blob) => {
+                const formData = new FormData();
+                formData.append('image', blob, 'capture.jpg');
+                
+                try {
+                    const response = await fetch('/scan', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const result = await response.json();
+                    loading.classList.remove('active');
+                    
+                    if (result.has_dataset) {
+                        document.getElementById('resultClass').textContent = result.classification || 'Desconhecido';
+                        document.getElementById('resultScore').textContent = result.confidence;
+                        
+                        const topMatchesContainer = document.getElementById('topMatches');
+                        topMatchesContainer.innerHTML = '';
+                        
+                        result.top_3.forEach(match => {
+                            const div = document.createElement('div');
+                            div.className = 'match-item';
+                            div.innerHTML = `
+                                <span class="match-name">${match.classification}</span>
+                                <span class="match-score">${match.similarity}% (${match.samples_count} amostras)</span>
+                            `;
+                            topMatchesContainer.appendChild(div);
+                        });
+                    } else {
+                        document.getElementById('resultClass').textContent = 'Dataset vazio';
+                        document.getElementById('resultScore').textContent = '0';
+                        document.getElementById('topMatches').innerHTML = '<p style="color: #fbbf24;">Adicione imagens ao dataset para classificar.</p>';
+                    }
+                    
+                    resultBox.classList.remove('hidden');
+                } catch (err) {
+                    loading.classList.remove('active');
+                    console.error('Error classifying:', err);
+                    alert('Erro ao classificar imagem: ' + err.message);
+                }
+            }, 'image/jpeg', 0.9);
+        }
+
+        async function loadClasses() {
+            try {
+                const response = await fetch('/dataset/classes');
+                const data = await response.json();
+                
+                const classList = document.getElementById('classList');
+                const uploadClass = document.getElementById('uploadClass');
+                const noDatasetWarning = document.getElementById('noDatasetWarning');
+                
+                classList.innerHTML = '';
+                uploadClass.innerHTML = '';
+                
+                let totalImages = 0;
+                
+                data.classes.forEach(cls => {
+                    totalImages += cls.image_count;
+                    
+                    const div = document.createElement('div');
+                    div.className = 'class-item';
+                    div.innerHTML = `
+                        <span class="class-name">${cls.name}</span>
+                        <span class="class-count">${cls.image_count}</span>
+                    `;
+                    classList.appendChild(div);
+                    
+                    const option = document.createElement('option');
+                    option.value = cls.name;
+                    option.textContent = cls.name;
+                    uploadClass.appendChild(option);
+                });
+                
+                if (totalImages === 0) {
+                    noDatasetWarning.classList.remove('hidden');
+                } else {
+                    noDatasetWarning.classList.add('hidden');
+                }
+            } catch (err) {
+                console.error('Error loading classes:', err);
+            }
+        }
+
+        async function uploadImage() {
+            const classification = document.getElementById('uploadClass').value;
+            const fileInput = document.getElementById('uploadImage');
+            const statusDiv = document.getElementById('uploadStatus');
+            
+            if (!fileInput.files.length) {
+                statusDiv.className = 'status-message error';
+                statusDiv.textContent = 'Selecione uma imagem';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+            formData.append('classification', classification);
+            
+            try {
+                const response = await fetch('/dataset/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    statusDiv.className = 'status-message success';
+                    statusDiv.textContent = result.message;
+                    fileInput.value = '';
+                    loadClasses();
+                } else {
+                    statusDiv.className = 'status-message error';
+                    statusDiv.textContent = result.detail || 'Erro ao enviar';
+                }
+            } catch (err) {
+                statusDiv.className = 'status-message error';
+                statusDiv.textContent = 'Erro: ' + err.message;
+            }
+        }
+
+        async function retrainEmbeddings() {
+            const btn = document.getElementById('retrainBtn');
+            btn.disabled = true;
+            btn.textContent = 'Retreinando...';
+            
+            try {
+                const response = await fetch('/dataset/retrain', { method: 'POST' });
+                const result = await response.json();
+                alert(result.message || 'Embeddings atualizados!');
+            } catch (err) {
+                alert('Erro ao retreinar: ' + err.message);
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Retreinar Embeddings';
+        }
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab + 'Tab').classList.add('active');
+            });
+        });
+
+        startCameraBtn.addEventListener('click', startCamera);
+        stopCameraBtn.addEventListener('click', stopCamera);
+        captureBtn.addEventListener('click', captureAndClassify);
+        document.getElementById('refreshClasses').addEventListener('click', loadClasses);
+        document.getElementById('uploadBtn').addEventListener('click', uploadImage);
+        document.getElementById('retrainBtn').addEventListener('click', retrainEmbeddings);
+
+        loadClasses();
+    </script>
+</body>
+</html>
