@@ -22,4 +22,4 @@ ENV PYTHONUNBUFFERED=1
 
 EXPOSE 5000
 
-CMD ["sh", "-c", "echo 'DATABASE_URL:' $DATABASE_URL && python -c 'from database import init_db; init_db()' && uvicorn main:app --host 0.0.0.0 --port $PORT"]
+CMD ["sh", "-c", "echo 'Initializing database...' && python -c 'from database import init_db; result = init_db(); print(\"Tables created successfully!\" if result else \"Warning: Database initialization had issues\")' && echo 'Starting server...' && uvicorn main:app --host 0.0.0.0 --port $PORT"]

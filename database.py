@@ -79,11 +79,17 @@ class ScanHistory(Base):
     scanned_at = Column(DateTime, default=datetime.utcnow)
 
 def init_db(max_retries=5, retry_delay=3):
+    db_url = get_database_url()
+    is_postgres = db_url.startswith("postgresql")
+    print(f"Database type: {'PostgreSQL' if is_postgres else 'SQLite'}")
+    print(f"Attempting to connect to database...")
+    
     for attempt in range(max_retries):
         try:
             eng = get_engine()
+            print(f"Creating tables: classifications, dataset_images, embeddings, scan_history...")
             Base.metadata.create_all(bind=eng)
-            print("Database tables created successfully!")
+            print("All database tables created successfully!")
             return True
         except Exception as e:
             print(f"Database connection attempt {attempt + 1}/{max_retries} failed: {e}")
@@ -91,7 +97,7 @@ def init_db(max_retries=5, retry_delay=3):
                 print(f"Retrying in {retry_delay} seconds...")
                 time.sleep(retry_delay)
             else:
-                print("Could not connect to database. Starting without database.")
+                print("Could not connect to database after all retries.")
                 return False
 
 def get_db():
