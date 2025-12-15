@@ -13,7 +13,7 @@ from pathlib import Path
 from contextlib import asynccontextmanager
 
 from embedding_engine import get_engine, OFFICIAL_CLASSES
-from database import init_db, get_db, ScanHistory, SessionLocal
+from database import init_db, get_db, ScanHistory
 
 app = FastAPI(
     title="MRX SCAN",

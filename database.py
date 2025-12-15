@@ -1,17 +1,47 @@
 import os
+import time
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text, LargeBinary, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import QueuePool
 from datetime import datetime
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./mrxscan.db")
+def get_database_url():
+    url = os.getenv("DATABASE_URL", "sqlite:///./mrxscan.db")
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql://", 1)
+    return url
 
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+DATABASE_URL = get_database_url()
 
-engine = create_engine(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine = None
+SessionLocal = None
 Base = declarative_base()
+
+def get_engine():
+    global engine
+    if engine is None:
+        db_url = get_database_url()
+        print(f"Connecting to database...")
+        if db_url.startswith("postgresql"):
+            engine = create_engine(
+                db_url,
+                poolclass=QueuePool,
+                pool_size=5,
+                max_overflow=10,
+                pool_timeout=30,
+                pool_recycle=1800,
+                pool_pre_ping=True
+            )
+        else:
+            engine = create_engine(db_url)
+    return engine
+
+def get_session_local():
+    global SessionLocal
+    if SessionLocal is None:
+        SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=get_engine())
+    return SessionLocal
 
 class Classification(Base):
     __tablename__ = "classifications"
@@ -48,12 +78,25 @@ class ScanHistory(Base):
     confidence = Column(Float, nullable=False)
     scanned_at = Column(DateTime, default=datetime.utcnow)
 
-def init_db():
-    Base.metadata.create_all(bind=engine)
-    print("Database tables created successfully!")
+def init_db(max_retries=5, retry_delay=3):
+    for attempt in range(max_retries):
+        try:
+            eng = get_engine()
+            Base.metadata.create_all(bind=eng)
+            print("Database tables created successfully!")
+            return True
+        except Exception as e:
+            print(f"Database connection attempt {attempt + 1}/{max_retries} failed: {e}")
+            if attempt < max_retries - 1:
+                print(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            else:
+                print("Could not connect to database. Starting without database.")
+                return False
 
 def get_db():
-    db = SessionLocal()
+    session_local = get_session_local()
+    db = session_local()
     try:
         yield db
     finally:
