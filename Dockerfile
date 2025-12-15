@@ -18,4 +18,4 @@ RUN mkdir -p dataset embeddings
 
 EXPOSE 5000
 
-CMD python -c "from database import init_db; init_db()" && uvicorn main:app --host 0.0.0.0 --port ${PORT:-5000}
+CMD ["sh", "-c", "python -c 'from database import init_db; init_db()' && uvicorn main:app --host 0.0.0.0 --port ${PORT:-5000}"]
