@@ -7,11 +7,11 @@ RUN apt-get update && apt-get install -y \
     libsm6 \
     libxext6 \
     libxrender-dev \
-    curl \
+    libgl1 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt
 
 COPY . .
 
@@ -22,4 +22,7 @@ ENV PYTHONUNBUFFERED=1
 
 EXPOSE 5000
 
-CMD ["sh", "-c", "echo 'Initializing database...' && python -c 'from database import init_db; result = init_db(); print(\"Tables created successfully!\" if result else \"Warning: Database initialization had issues\")' && echo 'Starting server...' && uvicorn main:app --host 0.0.0.0 --port $PORT"]
+COPY start.sh .
+RUN chmod +x start.sh
+
+CMD ["./start.sh"]
