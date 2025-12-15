@@ -51,3 +51,33 @@ The app runs on port 5000 with `python main.py`
 
 ## Configuration
 - SIMILARITY_THRESHOLD: 0.60 (60%) - configurable in embedding_engine.py
+- DATABASE_URL: PostgreSQL connection string (auto-detected by Railway)
+
+## Deploy no Railway
+
+### Passo a Passo:
+1. **Crie uma conta no Railway** (https://railway.app)
+2. **Conecte seu repositório GitHub** ou faça upload do projeto
+3. **Adicione um banco PostgreSQL**:
+   - No painel do Railway, clique em "New" > "Database" > "PostgreSQL"
+   - O Railway irá automaticamente definir a variável `DATABASE_URL`
+4. **Deploy**:
+   - O Railway usará automaticamente o `Procfile` ou `nixpacks.toml`
+   - As tabelas serão criadas automaticamente no primeiro deploy
+
+### Arquivos para Railway:
+- `requirements.txt` - Dependências Python
+- `Procfile` - Comando de inicialização
+- `railway.json` - Configuração do Railway
+- `nixpacks.toml` - Build configuration
+- `database.py` - Modelos SQLAlchemy com auto-criação de tabelas
+
+### Variáveis de Ambiente:
+- `DATABASE_URL` - Configurado automaticamente pelo Railway PostgreSQL
+- `PORT` - Configurado automaticamente pelo Railway
+
+### Tabelas Criadas Automaticamente:
+- `classifications` - Categorias de materiais
+- `dataset_images` - Imagens do dataset
+- `embeddings` - Embeddings calculados
+- `scan_history` - Histórico de scans

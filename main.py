@@ -10,8 +10,10 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 from typing import Optional, List
 from pathlib import Path
+from contextlib import asynccontextmanager
 
 from embedding_engine import get_engine, OFFICIAL_CLASSES
+from database import init_db, get_db, ScanHistory, SessionLocal
 
 app = FastAPI(
     title="MRX SCAN",
@@ -36,7 +38,10 @@ app.mount("/images", StaticFiles(directory=DATASET_DIR), name="images")
 
 @app.on_event("startup")
 async def startup_event():
-    """Initialize the embedding engine on startup"""
+    """Initialize the database and embedding engine on startup"""
+    print("Initializing database...")
+    init_db()
+    print("Database initialized!")
     print("Initializing MRX SCAN embedding engine...")
     get_engine()
     print("MRX SCAN ready!")
