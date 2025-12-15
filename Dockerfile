@@ -7,6 +7,7 @@ RUN apt-get update && apt-get install -y \
     libsm6 \
     libxext6 \
     libxrender-dev \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
@@ -17,5 +18,8 @@ COPY . .
 RUN mkdir -p dataset embeddings
 
 ENV PORT=5000
+ENV PYTHONUNBUFFERED=1
 
-CMD ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port $PORT"]
+EXPOSE 5000
+
+CMD ["sh", "-c", "echo 'DATABASE_URL:' $DATABASE_URL && python -c 'from database import init_db; init_db()' && uvicorn main:app --host 0.0.0.0 --port $PORT"]
