@@ -15,6 +15,8 @@ from pathlib import Path
 DATASET_DIR = "dataset"
 EMBEDDINGS_DIR = "embeddings"
 
+SIMILARITY_THRESHOLD = 0.60
+
 OFFICIAL_CLASSES = [
     "HIGH GRADE",
     "MIDION GRADE",
@@ -286,14 +288,41 @@ class EmbeddingEngine:
             for c in all_classes
         )
         
+        best_similarity = sorted_image_matches[0]["similarity"] / 100.0 if sorted_image_matches else 0.0
+        
+        if not has_samples:
+            return {
+                "classification": None,
+                "similarity_score": 0.0,
+                "reference_image": None,
+                "top_matches": [],
+                "top_3": [],
+                "has_dataset": False,
+                "status": "no_dataset",
+                "message": "No images in dataset. Please upload training images first."
+            }
+        
+        if best_similarity < SIMILARITY_THRESHOLD:
+            return {
+                "classification": None,
+                "similarity_score": round(best_similarity * 100, 2),
+                "reference_image": None,
+                "top_matches": top_3_images,
+                "top_3": top_3_classes,
+                "has_dataset": True,
+                "status": "no_match",
+                "message": "Essa imagem não tem compatibilidade com nenhuma do seu banco de dados. Crie uma nova categoria ou adicione mais fotos."
+            }
+        
         return {
-            "classification": top_class if has_samples else None,
-            "similarity_score": round(top_score * 100, 2) if has_samples else 0.0,
+            "classification": top_class,
+            "similarity_score": round(top_score * 100, 2),
             "reference_image": reference_image,
             "top_matches": top_3_images,
             "top_3": top_3_classes,
-            "has_dataset": has_samples,
-            "message": "Classification successful" if has_samples else "No images in dataset. Please upload training images first."
+            "has_dataset": True,
+            "status": "match",
+            "message": "Classification successful"
         }
     
     def get_class_info(self) -> List[Dict]:

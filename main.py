@@ -206,6 +206,46 @@ async def get_class_images(class_name: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.post("/dataset/capture-multiple")
+async def capture_multiple_images(
+    images: List[UploadFile] = File(...),
+    classification: str = Form(...)
+):
+    """
+    Upload multiple captured images from camera to a specific classification
+    """
+    try:
+        import uuid
+        from datetime import datetime
+        
+        engine = get_engine()
+        saved_paths = []
+        
+        for image in images:
+            contents = await image.read()
+            if contents:
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                unique_id = uuid.uuid4().hex[:8]
+                filename = f"capture_{timestamp}_{unique_id}.jpg"
+                
+                saved_path = engine.add_image_to_class(
+                    classification,
+                    contents,
+                    filename
+                )
+                saved_paths.append(saved_path)
+        
+        return JSONResponse(content={
+            "success": True,
+            "message": f"{len(saved_paths)} imagens capturadas adicionadas a {classification}",
+            "paths": saved_paths
+        })
+    
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/dataset/retrain")
 async def retrain_dataset():
     """

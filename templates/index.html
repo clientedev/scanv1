@@ -38,16 +38,9 @@
         }
 
         .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #fff;
-            font-weight: bold;
-            font-size: 14px;
+            height: 45px;
+            width: auto;
+            object-fit: contain;
         }
 
         .logo-text {
@@ -658,12 +651,111 @@
             font-weight: 600;
             color: #333;
         }
+
+        .result-warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #fff;
+        }
+
+        .warning-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .warning-message {
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .warning-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-warning {
+            background: #fff;
+            color: #d97706;
+            border: none;
+        }
+
+        .btn-warning:hover {
+            background: #fef3c7;
+        }
+
+        .capture-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 12px;
+            margin: 16px 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .capture-thumbnail {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #e0e0e0;
+        }
+
+        .capture-thumbnail img {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+        }
+
+        .capture-thumbnail .remove-btn {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #ef4444;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .capture-count {
+            background: #22c55e;
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            display: inline-block;
+            margin-bottom: 12px;
+        }
+
+        .capture-camera-container {
+            background: #1a1a2e;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .capture-camera-container video {
+            width: 100%;
+            aspect-ratio: 4/3;
+            object-fit: cover;
+        }
     </style>
 </head>
 <body>
     <header class="header">
         <div class="logo">
-            <div class="logo-icon">MRX</div>
+            <img src="/static/logo.png" alt="MRX Logo" class="logo-icon">
             <span class="logo-text">MRX SCAN</span>
         </div>
         <nav class="nav-tabs">
@@ -733,9 +825,26 @@
                     </div>
 
                     <div class="result-section" id="resultSection">
-                        <div class="result-header">
+                        <div class="result-header" id="resultSuccess">
                             <div class="result-classification" id="resultClass">-</div>
                             <div class="result-confidence">Similaridade: <span id="resultScore">0</span>%</div>
+                        </div>
+
+                        <div class="result-warning hidden" id="resultNoMatch">
+                            <div class="warning-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                            <div class="result-classification">Sem Correspondencia</div>
+                            <div class="result-confidence">Similaridade: <span id="noMatchScore">0</span>%</div>
+                            <div class="warning-message" id="noMatchMessage">
+                                Essa imagem nao tem compatibilidade com nenhuma do seu banco de dados. Crie uma nova categoria ou adicione mais fotos.
+                            </div>
+                            <div class="warning-actions">
+                                <button class="btn btn-warning" id="createCategoryBtn">
+                                    <i class="fas fa-folder-plus"></i> Criar Nova Categoria
+                                </button>
+                                <button class="btn btn-warning" id="addPhotosBtn">
+                                    <i class="fas fa-images"></i> Adicionar Mais Fotos
+                                </button>
+                            </div>
                         </div>
 
                         <div class="comparison-container">
@@ -772,6 +881,9 @@
                     <div style="display: flex; gap: 12px;">
                         <button class="btn btn-secondary" id="createFolderBtn">
                             <i class="fas fa-folder-plus"></i> Criar Pasta
+                        </button>
+                        <button class="btn btn-secondary" id="captureMultipleBtn">
+                            <i class="fas fa-camera"></i> Captura Multipla
                         </button>
                         <button class="btn btn-primary" id="uploadImagesBtn">
                             <i class="fas fa-upload"></i> Adicionar Imagens
@@ -857,12 +969,47 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="captureModal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Captura Multipla</h3>
+                <button class="modal-close" id="closeCaptureModal">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="captureClass">Pasta de Destino:</label>
+                <select id="captureClass" required></select>
+            </div>
+            <div class="capture-camera-container">
+                <video id="captureVideo" autoplay playsinline></video>
+            </div>
+            <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                <button class="btn btn-primary" id="startCaptureCamera">
+                    <i class="fas fa-play"></i> Iniciar Camera
+                </button>
+                <button class="btn btn-primary" id="takeCapturePhoto" disabled>
+                    <i class="fas fa-camera"></i> Capturar Foto
+                </button>
+                <button class="btn btn-secondary" id="stopCaptureCamera" disabled>
+                    <i class="fas fa-stop"></i> Parar
+                </button>
+            </div>
+            <div class="capture-count" id="captureCount">0 fotos capturadas</div>
+            <div class="capture-grid" id="captureGrid"></div>
+            <button class="btn btn-primary" id="sendAllCaptures" style="width: 100%;" disabled>
+                <i class="fas fa-upload"></i> Enviar Todas as Fotos
+            </button>
+            <div class="status-message" id="captureStatus"></div>
+        </div>
+    </div>
+
     <script>
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         let stream = null;
         let currentFolder = null;
+        let captureStream = null;
+        let capturedBlobs = [];
 
         function getImageUrl(path) {
             if (!path) return '';
@@ -937,12 +1084,52 @@
                     const result = await response.json();
                     document.getElementById('loading').classList.remove('active');
                     
-                    if (result.has_dataset) {
+                    const resultSuccess = document.getElementById('resultSuccess');
+                    const resultNoMatch = document.getElementById('resultNoMatch');
+                    const refImage = document.getElementById('referenceImage');
+                    const noRef = document.getElementById('noReference');
+                    const comparisonBox = document.querySelector('.comparison-container');
+                    const topMatchesBox = document.querySelector('.top-matches');
+                    
+                    if (result.status === 'no_match') {
+                        resultSuccess.classList.add('hidden');
+                        resultNoMatch.classList.remove('hidden');
+                        document.getElementById('noMatchScore').textContent = result.similarity_score;
+                        document.getElementById('noMatchMessage').textContent = result.message;
+                        
+                        refImage.classList.add('hidden');
+                        noRef.classList.remove('hidden');
+                        
+                        comparisonBox.style.display = 'grid';
+                        topMatchesBox.style.display = 'block';
+                        
+                        const topMatchesContainer = document.getElementById('topMatches');
+                        topMatchesContainer.innerHTML = '';
+                        if (result.top_matches && result.top_matches.length > 0) {
+                            result.top_matches.forEach((match, index) => {
+                                const div = document.createElement('div');
+                                div.className = 'match-item';
+                                const imgUrl = getImageUrl(match.image_path);
+                                const shortPath = match.image_path ? match.image_path.split('/').slice(-2).join('/') : '';
+                                div.innerHTML = `
+                                    <img class="match-thumbnail" src="${imgUrl}" alt="Match ${index + 1}" onerror="this.style.display='none'">
+                                    <div class="match-info">
+                                        <span class="match-name">${match.classification}</span>
+                                        <span class="match-path">${shortPath}</span>
+                                    </div>
+                                    <span class="match-score">${match.similarity}%</span>
+                                `;
+                                topMatchesContainer.appendChild(div);
+                            });
+                        }
+                    } else if (result.has_dataset && result.status === 'match') {
+                        resultSuccess.classList.remove('hidden');
+                        resultNoMatch.classList.add('hidden');
                         document.getElementById('resultClass').textContent = result.classification || 'Desconhecido';
                         document.getElementById('resultScore').textContent = result.similarity_score;
                         
-                        const refImage = document.getElementById('referenceImage');
-                        const noRef = document.getElementById('noReference');
+                        comparisonBox.style.display = 'grid';
+                        topMatchesBox.style.display = 'block';
                         
                         if (result.reference_image && result.reference_image.image_path) {
                             refImage.src = getImageUrl(result.reference_image.image_path);
@@ -976,10 +1163,12 @@
                             });
                         }
                     } else {
+                        resultSuccess.classList.remove('hidden');
+                        resultNoMatch.classList.add('hidden');
                         document.getElementById('resultClass').textContent = 'Dataset vazio';
                         document.getElementById('resultScore').textContent = '0';
-                        document.getElementById('referenceImage').classList.add('hidden');
-                        document.getElementById('noReference').classList.remove('hidden');
+                        refImage.classList.add('hidden');
+                        noRef.classList.remove('hidden');
                         document.getElementById('topMatches').innerHTML = '<p style="color: #666; text-align: center;">Adicione imagens ao dataset primeiro.</p>';
                     }
                     
@@ -1224,6 +1413,172 @@
                     modal.classList.remove('active');
                 }
             });
+        });
+
+        document.getElementById('createCategoryBtn').addEventListener('click', () => {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+            document.querySelector('[data-view="dataset"]').classList.add('active');
+            document.getElementById('datasetView').classList.add('active');
+            loadFolders();
+            document.getElementById('createFolderModal').classList.add('active');
+        });
+
+        document.getElementById('addPhotosBtn').addEventListener('click', () => {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+            document.querySelector('[data-view="dataset"]').classList.add('active');
+            document.getElementById('datasetView').classList.add('active');
+            loadFolders();
+            setTimeout(() => {
+                document.getElementById('uploadModal').classList.add('active');
+            }, 300);
+        });
+
+        document.getElementById('captureMultipleBtn').addEventListener('click', () => {
+            const captureSelect = document.getElementById('captureClass');
+            captureSelect.innerHTML = document.getElementById('uploadClass').innerHTML;
+            capturedBlobs = [];
+            updateCaptureGrid();
+            document.getElementById('captureStatus').className = 'status-message';
+            document.getElementById('captureModal').classList.add('active');
+        });
+
+        document.getElementById('closeCaptureModal').addEventListener('click', () => {
+            if (captureStream) {
+                captureStream.getTracks().forEach(track => track.stop());
+                captureStream = null;
+            }
+            capturedBlobs = [];
+            document.getElementById('captureModal').classList.remove('active');
+        });
+
+        document.getElementById('startCaptureCamera').addEventListener('click', async () => {
+            try {
+                captureStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+                });
+                document.getElementById('captureVideo').srcObject = captureStream;
+                document.getElementById('startCaptureCamera').disabled = true;
+                document.getElementById('stopCaptureCamera').disabled = false;
+                document.getElementById('takeCapturePhoto').disabled = false;
+            } catch (err) {
+                alert('Erro ao acessar camera: ' + err.message);
+            }
+        });
+
+        document.getElementById('stopCaptureCamera').addEventListener('click', () => {
+            if (captureStream) {
+                captureStream.getTracks().forEach(track => track.stop());
+                captureStream = null;
+            }
+            document.getElementById('captureVideo').srcObject = null;
+            document.getElementById('startCaptureCamera').disabled = false;
+            document.getElementById('stopCaptureCamera').disabled = true;
+            document.getElementById('takeCapturePhoto').disabled = true;
+        });
+
+        document.getElementById('takeCapturePhoto').addEventListener('click', () => {
+            const captureVideo = document.getElementById('captureVideo');
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = captureVideo.videoWidth;
+            tempCanvas.height = captureVideo.videoHeight;
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.drawImage(captureVideo, 0, 0);
+            
+            tempCanvas.toBlob((blob) => {
+                capturedBlobs.push(blob);
+                updateCaptureGrid();
+            }, 'image/jpeg', 0.9);
+        });
+
+        function updateCaptureGrid() {
+            const grid = document.getElementById('captureGrid');
+            const count = document.getElementById('captureCount');
+            const sendBtn = document.getElementById('sendAllCaptures');
+            
+            count.textContent = `${capturedBlobs.length} fotos capturadas`;
+            sendBtn.disabled = capturedBlobs.length === 0;
+            
+            grid.innerHTML = '';
+            capturedBlobs.forEach((blob, index) => {
+                const div = document.createElement('div');
+                div.className = 'capture-thumbnail';
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(blob);
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-btn';
+                removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+                removeBtn.addEventListener('click', () => {
+                    capturedBlobs.splice(index, 1);
+                    updateCaptureGrid();
+                });
+                div.appendChild(img);
+                div.appendChild(removeBtn);
+                grid.appendChild(div);
+            });
+        }
+
+        document.getElementById('sendAllCaptures').addEventListener('click', async () => {
+            const classification = document.getElementById('captureClass').value;
+            const status = document.getElementById('captureStatus');
+            const sendBtn = document.getElementById('sendAllCaptures');
+            
+            if (!classification) {
+                status.className = 'status-message error';
+                status.textContent = 'Selecione uma pasta de destino';
+                return;
+            }
+            
+            if (capturedBlobs.length === 0) {
+                status.className = 'status-message error';
+                status.textContent = 'Capture pelo menos uma foto';
+                return;
+            }
+            
+            sendBtn.disabled = true;
+            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('classification', classification);
+                capturedBlobs.forEach((blob, index) => {
+                    formData.append('images', blob, `capture_${index}.jpg`);
+                });
+                
+                const response = await fetch('/dataset/capture-multiple', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    status.className = 'status-message success';
+                    status.textContent = result.message;
+                    capturedBlobs = [];
+                    updateCaptureGrid();
+                    loadFolders();
+                    
+                    if (captureStream) {
+                        captureStream.getTracks().forEach(track => track.stop());
+                        captureStream = null;
+                    }
+                    
+                    setTimeout(() => {
+                        document.getElementById('captureModal').classList.remove('active');
+                    }, 1500);
+                } else {
+                    status.className = 'status-message error';
+                    status.textContent = result.detail || 'Erro ao enviar fotos';
+                }
+            } catch (err) {
+                status.className = 'status-message error';
+                status.textContent = 'Erro: ' + err.message;
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.innerHTML = '<i class="fas fa-upload"></i> Enviar Todas as Fotos';
+            }
         });
 
         loadFolders();
