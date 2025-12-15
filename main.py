@@ -27,6 +27,7 @@ app.add_middleware(
 )
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/images", StaticFiles(directory="dataset"), name="images")
 
 @app.on_event("startup")
 async def startup_event():

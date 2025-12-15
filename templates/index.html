@@ -19,7 +19,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -48,7 +48,7 @@
             gap: 30px;
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 1000px) {
             .main-content {
                 grid-template-columns: 1fr;
             }
@@ -151,138 +151,146 @@
             transform: none;
         }
 
-        .result-box {
-            background: rgba(233, 69, 96, 0.1);
-            border: 2px solid #e94560;
-            border-radius: 10px;
-            padding: 20px;
+        .result-section {
             margin-top: 20px;
-        }
-
-        .result-box.hidden {
             display: none;
         }
 
+        .result-section.active {
+            display: block;
+        }
+
+        .result-header {
+            background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
         .result-classification {
-            font-size: 1.8rem;
+            font-size: 2rem;
             font-weight: bold;
-            color: #4ade80;
-            margin-bottom: 10px;
+            color: white;
+            margin-bottom: 5px;
         }
 
         .result-confidence {
-            font-size: 1.2rem;
-            color: #fbbf24;
-            margin-bottom: 15px;
+            font-size: 1.3rem;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .image-box {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #0f3460;
+        }
+
+        .image-box-title {
+            background: #0f3460;
+            padding: 10px 15px;
+            font-weight: 500;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .image-box-title.reference {
+            background: #4ade80;
+            color: #1a1a2e;
+        }
+
+        .image-box img {
+            width: 100%;
+            aspect-ratio: 4/3;
+            object-fit: cover;
+            display: block;
+        }
+
+        .image-box-info {
+            padding: 10px 15px;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            text-align: center;
+        }
+
+        .image-box-info strong {
+            color: #4ade80;
         }
 
         .top-matches {
-            margin-top: 15px;
+            background: rgba(15, 52, 96, 0.3);
+            border-radius: 10px;
+            padding: 15px;
         }
 
         .top-matches h4 {
             color: #94a3b8;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
         }
 
         .match-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 12px;
+            display: grid;
+            grid-template-columns: 60px 1fr auto;
+            gap: 12px;
+            padding: 10px;
             background: rgba(15, 52, 96, 0.5);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .match-thumbnail {
+            width: 60px;
+            height: 45px;
+            object-fit: cover;
             border-radius: 5px;
-            margin-bottom: 5px;
+        }
+
+        .match-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
         }
 
         .match-name {
             color: #e2e8f0;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .match-path {
+            color: #64748b;
+            font-size: 0.75rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .match-score {
             color: #4ade80;
-            font-weight: 500;
-        }
-
-        .upload-section {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #0f3460;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #94a3b8;
-        }
-
-        .form-group select, .form-group input[type="file"] {
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #0f3460;
-            background: #16213e;
-            color: #fff;
-            font-size: 1rem;
-        }
-
-        .class-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 10px;
-            margin-top: 15px;
-        }
-
-        .class-item {
-            background: rgba(15, 52, 96, 0.5);
-            padding: 12px;
-            border-radius: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .class-name {
-            font-weight: 500;
-            color: #e2e8f0;
-        }
-
-        .class-count {
-            background: #e94560;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-        }
-
-        .status-message {
-            padding: 12px;
-            border-radius: 8px;
-            margin-top: 15px;
-            display: none;
-        }
-
-        .status-message.success {
-            display: block;
-            background: rgba(74, 222, 128, 0.2);
-            border: 1px solid #4ade80;
-            color: #4ade80;
-        }
-
-        .status-message.error {
-            display: block;
-            background: rgba(239, 68, 68, 0.2);
-            border: 1px solid #ef4444;
-            color: #ef4444;
+            font-weight: 600;
+            font-size: 1.1rem;
         }
 
         .loading {
             display: none;
             text-align: center;
-            padding: 20px;
+            padding: 40px;
         }
 
         .loading.active {
@@ -290,13 +298,13 @@
         }
 
         .spinner {
-            width: 40px;
-            height: 40px;
+            width: 50px;
+            height: 50px;
             border: 4px solid #0f3460;
             border-top-color: #e94560;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
+            margin: 0 auto 15px;
         }
 
         @keyframes spin {
@@ -340,6 +348,89 @@
             border-radius: 8px;
             margin-bottom: 20px;
         }
+
+        .class-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .class-item {
+            background: rgba(15, 52, 96, 0.5);
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .class-name {
+            font-weight: 500;
+            color: #e2e8f0;
+            font-size: 0.85rem;
+        }
+
+        .class-count {
+            background: #e94560;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #94a3b8;
+        }
+
+        .form-group select, .form-group input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #0f3460;
+            background: #16213e;
+            color: #fff;
+            font-size: 1rem;
+        }
+
+        .status-message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .status-message.success {
+            display: block;
+            background: rgba(74, 222, 128, 0.2);
+            border: 1px solid #4ade80;
+            color: #4ade80;
+        }
+
+        .status-message.error {
+            display: block;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+        }
+
+        .no-reference {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.5);
+            color: #64748b;
+            aspect-ratio: 4/3;
+        }
+
+        .hidden {
+            display: none !important;
+        }
     </style>
 </head>
 <body>
@@ -369,14 +460,33 @@
 
                 <div class="loading" id="loading">
                     <div class="spinner"></div>
-                    <p>Processando imagem...</p>
+                    <p>Processando imagem com IA...</p>
                 </div>
 
-                <div class="result-box hidden" id="resultBox">
-                    <div class="result-classification" id="resultClass">-</div>
-                    <div class="result-confidence">Confianca: <span id="resultScore">0</span>%</div>
+                <div class="result-section" id="resultSection">
+                    <div class="result-header">
+                        <div class="result-classification" id="resultClass">-</div>
+                        <div class="result-confidence">Similaridade: <span id="resultScore">0</span>%</div>
+                    </div>
+
+                    <div class="comparison-container">
+                        <div class="image-box">
+                            <div class="image-box-title">Imagem Capturada</div>
+                            <img id="capturedImage" src="" alt="Imagem capturada">
+                            <div class="image-box-info">Material escaneado</div>
+                        </div>
+                        <div class="image-box">
+                            <div class="image-box-title reference">Imagem de Referencia (IA)</div>
+                            <img id="referenceImage" src="" alt="Imagem de referencia" class="hidden">
+                            <div class="no-reference hidden" id="noReference">Sem imagem de referencia</div>
+                            <div class="image-box-info">
+                                <span id="refClass">-</span> | Similaridade: <strong id="refScore">0</strong>%
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="top-matches">
-                        <h4>Top 3 Classificacoes:</h4>
+                        <h4>Top 3 Imagens Mais Similares:</h4>
                         <div id="topMatches"></div>
                     </div>
                 </div>
@@ -425,10 +535,11 @@
         const stopCameraBtn = document.getElementById('stopCamera');
         const captureBtn = document.getElementById('captureBtn');
         const cameraOverlay = document.getElementById('cameraOverlay');
-        const resultBox = document.getElementById('resultBox');
+        const resultSection = document.getElementById('resultSection');
         const loading = document.getElementById('loading');
 
         let stream = null;
+        let lastCapturedBlob = null;
 
         async function startCamera() {
             try {
@@ -459,15 +570,28 @@
             captureBtn.disabled = true;
         }
 
+        function getImageUrl(path) {
+            if (!path) return '';
+            const cleanPath = path.replace(/\\/g, '/');
+            if (cleanPath.startsWith('dataset/')) {
+                return '/images/' + cleanPath.substring(8);
+            }
+            return '/' + cleanPath;
+        }
+
         async function captureAndClassify() {
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.drawImage(video, 0, 0);
             
             loading.classList.add('active');
-            resultBox.classList.add('hidden');
+            resultSection.classList.remove('active');
             
             canvas.toBlob(async (blob) => {
+                lastCapturedBlob = blob;
+                const capturedUrl = URL.createObjectURL(blob);
+                document.getElementById('capturedImage').src = capturedUrl;
+                
                 const formData = new FormData();
                 formData.append('image', blob, 'capture.jpg');
                 
@@ -482,27 +606,55 @@
                     
                     if (result.has_dataset) {
                         document.getElementById('resultClass').textContent = result.classification || 'Desconhecido';
-                        document.getElementById('resultScore').textContent = result.confidence;
+                        document.getElementById('resultScore').textContent = result.similarity_score;
+                        
+                        const refImage = document.getElementById('referenceImage');
+                        const noRef = document.getElementById('noReference');
+                        
+                        if (result.reference_image && result.reference_image.image_path) {
+                            refImage.src = getImageUrl(result.reference_image.image_path);
+                            refImage.classList.remove('hidden');
+                            noRef.classList.add('hidden');
+                            document.getElementById('refClass').textContent = result.reference_image.classification;
+                            document.getElementById('refScore').textContent = result.reference_image.similarity;
+                        } else {
+                            refImage.classList.add('hidden');
+                            noRef.classList.remove('hidden');
+                            document.getElementById('refClass').textContent = '-';
+                            document.getElementById('refScore').textContent = '0';
+                        }
                         
                         const topMatchesContainer = document.getElementById('topMatches');
                         topMatchesContainer.innerHTML = '';
                         
-                        result.top_3.forEach(match => {
-                            const div = document.createElement('div');
-                            div.className = 'match-item';
-                            div.innerHTML = `
-                                <span class="match-name">${match.classification}</span>
-                                <span class="match-score">${match.similarity}% (${match.samples_count} amostras)</span>
-                            `;
-                            topMatchesContainer.appendChild(div);
-                        });
+                        if (result.top_matches && result.top_matches.length > 0) {
+                            result.top_matches.forEach((match, index) => {
+                                const div = document.createElement('div');
+                                div.className = 'match-item';
+                                const imgUrl = getImageUrl(match.image_path);
+                                const shortPath = match.image_path ? match.image_path.split('/').slice(-2).join('/') : '';
+                                div.innerHTML = `
+                                    <img class="match-thumbnail" src="${imgUrl}" alt="Match ${index + 1}" onerror="this.style.display='none'">
+                                    <div class="match-info">
+                                        <span class="match-name">${match.classification}</span>
+                                        <span class="match-path">${shortPath}</span>
+                                    </div>
+                                    <span class="match-score">${match.similarity}%</span>
+                                `;
+                                topMatchesContainer.appendChild(div);
+                            });
+                        } else {
+                            topMatchesContainer.innerHTML = '<p style="color: #fbbf24; text-align: center;">Nenhuma correspondencia encontrada.</p>';
+                        }
                     } else {
                         document.getElementById('resultClass').textContent = 'Dataset vazio';
                         document.getElementById('resultScore').textContent = '0';
-                        document.getElementById('topMatches').innerHTML = '<p style="color: #fbbf24;">Adicione imagens ao dataset para classificar.</p>';
+                        document.getElementById('referenceImage').classList.add('hidden');
+                        document.getElementById('noReference').classList.remove('hidden');
+                        document.getElementById('topMatches').innerHTML = '<p style="color: #fbbf24; text-align: center;">Adicione imagens ao dataset para classificar.</p>';
                     }
                     
-                    resultBox.classList.remove('hidden');
+                    resultSection.classList.add('active');
                 } catch (err) {
                     loading.classList.remove('active');
                     console.error('Error classifying:', err);

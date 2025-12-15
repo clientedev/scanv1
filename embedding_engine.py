@@ -193,13 +193,15 @@ class EmbeddingEngine:
         return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
     
     def classify_image(self, image_bytes: bytes) -> Dict:
-        """Classify an image and return results with top 3 classifications"""
+        """Classify an image and return results with reference image and top matches"""
         query_embedding = self.generate_embedding_from_bytes(image_bytes)
         
         class_scores = {}
+        all_image_matches = []
         
         for class_name in OFFICIAL_CLASSES:
             class_embeddings = self.embeddings_cache.get(class_name, np.array([]))
+            class_paths = self.image_paths_cache.get(class_name, [])
             
             if len(class_embeddings) == 0:
                 class_scores[class_name] = {
@@ -210,9 +212,16 @@ class EmbeddingEngine:
                 continue
             
             similarities = []
-            for emb in class_embeddings:
+            for i, emb in enumerate(class_embeddings):
                 sim = self.cosine_similarity(query_embedding, emb)
                 similarities.append(sim)
+                
+                if i < len(class_paths):
+                    all_image_matches.append({
+                        "classification": class_name,
+                        "image_path": class_paths[i],
+                        "similarity": round(sim * 100, 2)
+                    })
             
             class_scores[class_name] = {
                 "avg_similarity": float(np.mean(similarities)),
@@ -229,7 +238,24 @@ class EmbeddingEngine:
         top_class = sorted_classes[0][0] if sorted_classes else None
         top_score = sorted_classes[0][1]["avg_similarity"] if sorted_classes else 0.0
         
-        top_3 = [
+        sorted_image_matches = sorted(
+            all_image_matches,
+            key=lambda x: x["similarity"],
+            reverse=True
+        )
+        
+        reference_image = None
+        if sorted_image_matches:
+            best_match = sorted_image_matches[0]
+            reference_image = {
+                "image_path": best_match["image_path"],
+                "classification": best_match["classification"],
+                "similarity": best_match["similarity"]
+            }
+        
+        top_3_images = sorted_image_matches[:3]
+        
+        top_3_classes = [
             {
                 "classification": name,
                 "similarity": round(scores["avg_similarity"] * 100, 2),
@@ -246,8 +272,10 @@ class EmbeddingEngine:
         
         return {
             "classification": top_class if has_samples else None,
-            "confidence": round(top_score * 100, 2) if has_samples else 0.0,
-            "top_3": top_3,
+            "similarity_score": round(top_score * 100, 2) if has_samples else 0.0,
+            "reference_image": reference_image,
+            "top_matches": top_3_images,
+            "top_3": top_3_classes,
             "has_dataset": has_samples,
             "message": "Classification successful" if has_samples else "No images in dataset. Please upload training images first."
         }
