@@ -28,6 +28,7 @@ MRX SCAN is an AI-powered image classification system for electronic scrap mater
 - `POST /dataset/create` - Create new folder
 - `GET /dataset/images/{class_name}` - Get images from folder
 - `POST /dataset/upload-multiple` - Upload multiple images
+- `POST /dataset/capture-multiple` - Upload multiple captured camera images
 - `POST /dataset/retrain` - Retrain embeddings
 - `GET /health` - Health check
 
@@ -40,6 +41,13 @@ MRX SCAN is an AI-powered image classification system for electronic scrap mater
 The app runs on port 5000 with `python main.py`
 
 ## Recent Changes
+- 2025-12-15: Added visual identity with MRX DO BRASIL logo in header
+- 2025-12-15: Implemented 60% minimum similarity threshold (SIMILARITY_THRESHOLD = 0.60)
+- 2025-12-15: Added "no_match" status when similarity < 60% with Portuguese warning message
+- 2025-12-15: Added multiple capture mode (POST /dataset/capture-multiple) for batch camera uploads
 - 2025-12-15: Renamed to MRX SCAN, new green/white visual identity
 - 2025-12-15: Added dataset management interface (folder creation, multi-upload)
 - 2025-12-15: Dynamic folder-based classifications (any folder in /dataset is a class)
+
+## Configuration
+- SIMILARITY_THRESHOLD: 0.60 (60%) - configurable in embedding_engine.py
