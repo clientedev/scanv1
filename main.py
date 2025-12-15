@@ -39,9 +39,14 @@ app.mount("/images", StaticFiles(directory=DATASET_DIR), name="images")
 @app.on_event("startup")
 async def startup_event():
     """Initialize the database and embedding engine on startup"""
-    print("Initializing database...")
-    init_db()
-    print("Database initialized!")
+    import os
+    # Skip init_db if tables were already created by create_tables.py
+    if not os.getenv("SKIP_DB_INIT"):
+        print("Initializing database...")
+        init_db()
+        print("Database initialized!")
+    else:
+        print("Database already initialized by startup script")
     print("Initializing MRX SCAN embedding engine...")
     get_engine()
     print("MRX SCAN ready!")

@@ -22,7 +22,5 @@ ENV PYTHONUNBUFFERED=1
 
 EXPOSE 5000
 
-COPY start.sh .
-RUN chmod +x start.sh
-
-CMD ["./start.sh"]
+ENV SKIP_DB_INIT=1
+CMD python create_tables.py && uvicorn main:app --host 0.0.0.0 --port ${PORT}
