@@ -18,6 +18,9 @@ dependencies = [
     "tqdm>=4.67.1",
     "uvicorn>=0.38.0",
     "torch",
+    "psycopg2-binary>=2.9.9",
+    "sqlalchemy>=2.0.0",
+    "open-clip-torch>=2.24.0",
 ]
 
 [[tool.uv.index]]
