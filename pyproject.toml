@@ -1,8 +1,8 @@
 [project]
 name = "repl-nix-workspace"
 version = "0.1.0"
-description = "Add your description here"
-requires-python = ">=3.11"
+description = "Electronic Scrap Classification Scanner"
+requires-python = ">=3.11,<3.12"
 dependencies = [
     "fastapi>=0.124.4",
     "ftfy>=6.3.1",
@@ -14,12 +14,17 @@ dependencies = [
     "scipy>=1.16.3",
     "tqdm>=4.67.1",
     "uvicorn>=0.38.0",
+    "torch",
+    "open-clip-torch",
 ]
 
 [[tool.uv.index]]
-explicit = true
 name = "pytorch-cpu"
 url = "https://download.pytorch.org/whl/cpu"
+
+[tool.uv]
+index-strategy = "unsafe-best-match"
+required-environments = ["sys_platform == 'linux' and platform_machine == 'x86_64'"]
 
 [tool.uv.sources]
 AA-module = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
@@ -701,7 +706,6 @@ onediffx = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 onnx2pytorch = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 onnx2torch = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 opacus = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
-open-clip-torch = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 open-flamingo = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 open-interpreter = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 openbb-terminal-nightly = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
@@ -976,7 +980,6 @@ tmnt = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 toad = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 tomesd = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 top2vec = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
-torch = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 torch-audiomentations = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 torch-dct = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 torch-delaunay = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
@@ -1053,7 +1056,6 @@ torchtnt-nightly = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux
 torchtyping = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 torchutil = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 torchvinecopulib = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
-torchvision = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 torchviz = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 torchx = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]
 torchx-nightly = [{ index = "pytorch-cpu", marker = "platform_system == 'Linux'" }]

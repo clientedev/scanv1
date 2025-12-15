@@ -1,56 +1,45 @@
-# Electronic Scrap Classification Scanner
+# MRX SCAN - Sistema de Classificacao de Sucata Eletronica
 
 ## Overview
-A camera-based classification system for electronic scrap materials using OpenCLIP image similarity. The system captures images via webcam/camera and classifies materials according to official stock classifications. Includes reference image display for visual verification.
+MRX SCAN is an AI-powered image classification system for electronic scrap materials. It uses OpenCLIP (ViT-B-32) for image embeddings and cosine similarity to classify materials based on reference images in the dataset.
 
-## Project Architecture
+## Features
+- **Camera Scanner**: Real-time camera capture and classification
+- **Dataset Management**: Create folders, upload multiple images, view dataset
+- **AI Classification**: Uses OpenCLIP for image similarity comparison
+- **Visual Identity**: Green/white admin panel design (similar to Google Drive)
 
-### Backend (Python/FastAPI)
-- `main.py` - FastAPI server with REST endpoints
-- `embedding_engine.py` - OpenCLIP-based image embedding and classification engine
-
-### Frontend
-- `templates/index.html` - Camera scanner interface with classification display and reference image comparison
-
-### Data Storage
-- `dataset/` - Contains subdirectories for each classification with training images
-- `embeddings/` - Cached numpy embeddings for fast classification
-
-## Official Classifications
-1. HIGH GRADE
-2. MIDION GRADE
-3. MIDION GRADE 1 - MG 1
-4. MIDION GRADE 2 - MG 2
-5. LOW GRADE
-6. LOW
-7. DIVERSOS
-8. GARIMPOS
-9. MOAGEM
-10. HD
+## Project Structure
+```
+/
+├── main.py                 # FastAPI backend with all endpoints
+├── embedding_engine.py     # OpenCLIP model and classification logic
+├── templates/
+│   └── index.html         # Frontend SPA with Scanner and Dataset views
+├── dataset/               # Classification folders with images
+├── embeddings/            # Cached embeddings (.npy files)
+└── static/                # Static assets
+```
 
 ## API Endpoints
-- `POST /scan` - Classify an uploaded image, returns:
-  - classification: final classification name
-  - similarity_score: percentage similarity
-  - reference_image: most similar image from dataset with path, classification, similarity
-  - top_matches: top 3 individual images with thumbnails
-  - top_3: top 3 classifications by average similarity
-- `POST /dataset/upload` - Add new training image to a classification
-- `GET /dataset/classes` - List all classifications with image counts
-- `POST /dataset/retrain` - Regenerate all embeddings
+- `GET /` - Main interface
+- `POST /scan` - Classify an image
+- `GET /dataset/classes` - List all classification folders
+- `POST /dataset/create` - Create new folder
+- `GET /dataset/images/{class_name}` - Get images from folder
+- `POST /dataset/upload-multiple` - Upload multiple images
+- `POST /dataset/retrain` - Retrain embeddings
+- `GET /health` - Health check
 
-## How to Use
-1. Start the server
-2. Upload training images to each classification category
-3. Use the camera to scan materials
-4. System shows:
-   - Classification result
-   - Captured image vs Reference image side by side
-   - Top 3 most similar images from the dataset
+## Tech Stack
+- **Backend**: FastAPI, Python 3.11
+- **AI Model**: OpenCLIP ViT-B-32 (laion2b_s34b_b79k)
+- **Frontend**: Vanilla HTML/CSS/JS with Font Awesome icons
 
-## Technical Stack
-- FastAPI for REST API
-- OpenCLIP (ViT-B-32) for image embeddings
-- Cosine similarity for classification
-- Vanilla JavaScript with getUserMedia for camera capture
-- Images served via /images static route
+## Running the App
+The app runs on port 5000 with `python main.py`
+
+## Recent Changes
+- 2025-12-15: Renamed to MRX SCAN, new green/white visual identity
+- 2025-12-15: Added dataset management interface (folder creation, multi-upload)
+- 2025-12-15: Dynamic folder-based classifications (any folder in /dataset is a class)

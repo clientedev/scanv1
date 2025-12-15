@@ -1,5 +1,5 @@
 """
-Embedding Engine Module for Electronic Scrap Classification
+Embedding Engine Module for MRX SCAN - Electronic Scrap Classification
 Uses OpenCLIP for image embedding generation and cosine similarity comparison
 """
 
@@ -27,6 +27,20 @@ OFFICIAL_CLASSES = [
     "MOAGEM",
     "HD"
 ]
+
+def get_all_classes() -> List[str]:
+    """Get all classification folders from dataset directory"""
+    if not os.path.exists(DATASET_DIR):
+        os.makedirs(DATASET_DIR)
+        return []
+    
+    classes = []
+    for name in os.listdir(DATASET_DIR):
+        folder_path = os.path.join(DATASET_DIR, name)
+        if os.path.isdir(folder_path):
+            classes.append(name)
+    
+    return sorted(classes)
 
 class EmbeddingEngine:
     def __init__(self):
@@ -76,7 +90,9 @@ class EmbeddingEngine:
     def _load_embeddings(self):
         """Load all cached embeddings from disk"""
         print("Loading cached embeddings...")
-        for class_name in OFFICIAL_CLASSES:
+        all_classes = get_all_classes()
+        
+        for class_name in all_classes:
             embedding_path = self._get_embedding_path(class_name)
             metadata_path = self._get_metadata_path(class_name)
             
@@ -92,15 +108,12 @@ class EmbeddingEngine:
     
     def update_class_embeddings(self, class_name: str):
         """Update embeddings for a specific class by processing all images in its folder"""
-        if class_name not in OFFICIAL_CLASSES:
-            raise ValueError(f"Unknown class: {class_name}")
-        
         class_dir = os.path.join(DATASET_DIR, class_name)
         if not os.path.exists(class_dir):
             os.makedirs(class_dir)
             return
         
-        image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.webp'}
+        image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.webp', '.gif'}
         image_files = [
             f for f in os.listdir(class_dir)
             if os.path.splitext(f)[1].lower() in image_extensions
@@ -137,7 +150,8 @@ class EmbeddingEngine:
     def update_all_embeddings(self):
         """Update embeddings for all classes"""
         print("Updating all embeddings...")
-        for class_name in OFFICIAL_CLASSES:
+        all_classes = get_all_classes()
+        for class_name in all_classes:
             print(f"Processing class: {class_name}")
             self.update_class_embeddings(class_name)
         print("All embeddings updated")
@@ -146,9 +160,6 @@ class EmbeddingEngine:
         """Add a new image to a class and update embeddings"""
         import uuid
         import re
-        
-        if class_name not in OFFICIAL_CLASSES:
-            raise ValueError(f"Unknown class: {class_name}")
         
         class_dir = os.path.join(DATASET_DIR, class_name)
         os.makedirs(class_dir, exist_ok=True)
@@ -159,7 +170,7 @@ class EmbeddingEngine:
         base_name = os.path.splitext(safe_filename)[0] or 'image'
         ext = os.path.splitext(safe_filename)[1] or '.jpg'
         
-        if ext.lower() not in {'.jpg', '.jpeg', '.png', '.bmp', '.webp'}:
+        if ext.lower() not in {'.jpg', '.jpeg', '.png', '.bmp', '.webp', '.gif'}:
             ext = '.jpg'
         
         unique_id = uuid.uuid4().hex[:8]
@@ -172,13 +183,17 @@ class EmbeddingEngine:
         
         embedding = self.generate_embedding(image)
         
-        if len(self.embeddings_cache[class_name]) == 0:
+        if class_name not in self.embeddings_cache or len(self.embeddings_cache.get(class_name, [])) == 0:
             self.embeddings_cache[class_name] = np.array([embedding])
+            self.image_paths_cache[class_name] = []
         else:
             self.embeddings_cache[class_name] = np.vstack([
                 self.embeddings_cache[class_name],
                 embedding
             ])
+        
+        if class_name not in self.image_paths_cache:
+            self.image_paths_cache[class_name] = []
         
         self.image_paths_cache[class_name].append(new_path)
         
@@ -196,10 +211,11 @@ class EmbeddingEngine:
         """Classify an image and return results with reference image and top matches"""
         query_embedding = self.generate_embedding_from_bytes(image_bytes)
         
+        all_classes = get_all_classes()
         class_scores = {}
         all_image_matches = []
         
-        for class_name in OFFICIAL_CLASSES:
+        for class_name in all_classes:
             class_embeddings = self.embeddings_cache.get(class_name, np.array([]))
             class_paths = self.image_paths_cache.get(class_name, [])
             
@@ -267,7 +283,7 @@ class EmbeddingEngine:
         
         has_samples = any(
             len(self.embeddings_cache.get(c, [])) > 0
-            for c in OFFICIAL_CLASSES
+            for c in all_classes
         )
         
         return {
@@ -283,12 +299,14 @@ class EmbeddingEngine:
     def get_class_info(self) -> List[Dict]:
         """Get information about all classes and their image counts"""
         result = []
-        for class_name in OFFICIAL_CLASSES:
+        all_classes = get_all_classes()
+        
+        for class_name in all_classes:
             class_dir = os.path.join(DATASET_DIR, class_name)
             image_count = 0
             
             if os.path.exists(class_dir):
-                image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.webp'}
+                image_extensions = {'.jpg', '.jpeg', '.png', '.bmp', '.webp', '.gif'}
                 image_count = len([
                     f for f in os.listdir(class_dir)
                     if os.path.splitext(f)[1].lower() in image_extensions

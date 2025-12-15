@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scanner de Sucata Eletronica</title>
+    <title>MRX SCAN - Sistema de Classificacao</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -13,68 +14,295 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            background: #f5f5f5;
             min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: #fff;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #e0e0e0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .logo-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .nav-tab {
+            padding: 8px 20px;
+            border: 1px solid #e0e0e0;
+            background: #fff;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #666;
+            transition: all 0.2s;
+        }
+
+        .nav-tab:hover {
+            border-color: #22c55e;
+            color: #22c55e;
+        }
+
+        .nav-tab.active {
+            background: #22c55e;
+            color: #fff;
+            border-color: #22c55e;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #22c55e;
             color: #fff;
         }
 
-        .container {
+        .btn-primary:hover {
+            background: #16a34a;
+        }
+
+        .btn-secondary {
+            background: #fff;
+            color: #333;
+            border: 1px solid #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background: #f5f5f5;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .main-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 20px;
+            padding: 24px;
         }
 
-        header {
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .page-subtitle {
+            color: #666;
+            margin-bottom: 24px;
+        }
+
+        .view-container {
+            display: none;
+        }
+
+        .view-container.active {
+            display: block;
+        }
+
+        .folder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .folder-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
             text-align: center;
-            padding: 20px 0;
-            border-bottom: 2px solid #0f3460;
-            margin-bottom: 30px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
         }
 
-        h1 {
-            font-size: 2rem;
-            color: #e94560;
-            margin-bottom: 10px;
+        .folder-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            border-color: #22c55e;
         }
 
-        .subtitle {
-            color: #94a3b8;
-            font-size: 1rem;
+        .folder-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px;
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            color: #fff;
         }
 
-        .main-content {
+        .folder-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .folder-count {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .folder-count span {
+            background: #22c55e;
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            color: #666;
+        }
+
+        .breadcrumb a {
+            color: #22c55e;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .image-card {
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .image-card:hover {
+            border-color: #22c55e;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .image-card img {
+            width: 100%;
+            aspect-ratio: 4/3;
+            object-fit: cover;
+        }
+
+        .image-card-info {
+            padding: 12px;
+            text-align: center;
+        }
+
+        .image-card-name {
+            font-size: 0.8rem;
+            color: #666;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .scanner-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 30px;
+            gap: 24px;
         }
 
-        @media (max-width: 1000px) {
-            .main-content {
+        @media (max-width: 900px) {
+            .scanner-container {
                 grid-template-columns: 1fr;
             }
         }
 
         .panel {
-            background: rgba(15, 52, 96, 0.5);
-            border-radius: 15px;
-            padding: 25px;
-            border: 1px solid #0f3460;
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
         .panel-title {
-            font-size: 1.3rem;
+            font-size: 1.1rem;
+            font-weight: 600;
             margin-bottom: 20px;
-            color: #e94560;
             display: flex;
             align-items: center;
             gap: 10px;
+            color: #333;
+        }
+
+        .panel-title i {
+            color: #22c55e;
         }
 
         .camera-container {
             position: relative;
-            width: 100%;
-            background: #000;
-            border-radius: 10px;
+            background: #1a1a2e;
+            border-radius: 12px;
             overflow: hidden;
             aspect-ratio: 4/3;
         }
@@ -100,6 +328,13 @@
             justify-content: center;
             background: rgba(0,0,0,0.7);
             color: #94a3b8;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .camera-overlay i {
+            font-size: 48px;
+            color: #22c55e;
         }
 
         .camera-overlay.hidden {
@@ -109,108 +344,61 @@
         .controls {
             display: flex;
             gap: 10px;
-            margin-top: 15px;
+            margin-top: 16px;
             flex-wrap: wrap;
         }
 
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 500;
-        }
-
-        .btn-primary {
-            background: #e94560;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #ff6b6b;
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background: #0f3460;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #1a4a7a;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .result-section {
-            margin-top: 20px;
-            display: none;
-        }
-
-        .result-section.active {
-            display: block;
-        }
-
         .result-header {
-            background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
             padding: 20px;
-            border-radius: 10px;
+            border-radius: 12px;
             text-align: center;
             margin-bottom: 20px;
+            color: #fff;
         }
 
         .result-classification {
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: bold;
-            color: white;
-            margin-bottom: 5px;
         }
 
         .result-confidence {
-            font-size: 1.3rem;
-            color: rgba(255,255,255,0.9);
+            font-size: 1.1rem;
+            opacity: 0.9;
         }
 
         .comparison-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 16px;
+            margin-bottom: 16px;
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 500px) {
             .comparison-container {
                 grid-template-columns: 1fr;
             }
         }
 
         .image-box {
-            background: rgba(0,0,0,0.3);
-            border-radius: 10px;
+            background: #f9fafb;
+            border-radius: 12px;
             overflow: hidden;
-            border: 2px solid #0f3460;
+            border: 2px solid #e0e0e0;
         }
 
         .image-box-title {
-            background: #0f3460;
+            background: #f1f5f9;
             padding: 10px 15px;
             font-weight: 500;
             text-align: center;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            color: #666;
         }
 
         .image-box-title.reference {
-            background: #4ade80;
-            color: #1a1a2e;
+            background: #dcfce7;
+            color: #166534;
         }
 
         .image-box img {
@@ -222,25 +410,25 @@
 
         .image-box-info {
             padding: 10px 15px;
-            font-size: 0.85rem;
-            color: #94a3b8;
+            font-size: 0.8rem;
+            color: #666;
             text-align: center;
         }
 
         .image-box-info strong {
-            color: #4ade80;
+            color: #22c55e;
         }
 
         .top-matches {
-            background: rgba(15, 52, 96, 0.3);
-            border-radius: 10px;
-            padding: 15px;
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 16px;
         }
 
         .top-matches h4 {
-            color: #94a3b8;
-            margin-bottom: 15px;
-            font-size: 0.95rem;
+            color: #666;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
         }
 
         .match-item {
@@ -248,17 +436,18 @@
             grid-template-columns: 60px 1fr auto;
             gap: 12px;
             padding: 10px;
-            background: rgba(15, 52, 96, 0.5);
+            background: #fff;
             border-radius: 8px;
             margin-bottom: 8px;
             align-items: center;
+            border: 1px solid #e0e0e0;
         }
 
         .match-thumbnail {
             width: 60px;
             height: 45px;
             object-fit: cover;
-            border-radius: 5px;
+            border-radius: 6px;
         }
 
         .match-info {
@@ -268,23 +457,20 @@
         }
 
         .match-name {
-            color: #e2e8f0;
+            color: #333;
             font-weight: 500;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
         }
 
         .match-path {
-            color: #64748b;
-            font-size: 0.75rem;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
+            color: #94a3b8;
+            font-size: 0.7rem;
         }
 
         .match-score {
-            color: #4ade80;
+            color: #22c55e;
             font-weight: 600;
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
 
         .loading {
@@ -300,8 +486,8 @@
         .spinner {
             width: 50px;
             height: 50px;
-            border: 4px solid #0f3460;
-            border-top-color: #e94560;
+            border: 4px solid #e0e0e0;
+            border-top-color: #22c55e;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin: 0 auto 15px;
@@ -311,91 +497,106 @@
             to { transform: rotate(360deg); }
         }
 
-        .tabs {
-            display: flex;
-            gap: 5px;
-            margin-bottom: 20px;
-        }
-
-        .tab {
-            padding: 10px 20px;
-            background: #0f3460;
-            border: none;
-            border-radius: 8px 8px 0 0;
-            color: #94a3b8;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .tab.active {
-            background: #e94560;
-            color: white;
-        }
-
-        .tab-content {
+        .result-section {
+            margin-top: 20px;
             display: none;
         }
 
-        .tab-content.active {
+        .result-section.active {
             display: block;
         }
 
-        .no-dataset-warning {
-            background: rgba(251, 191, 36, 0.2);
-            border: 1px solid #fbbf24;
-            color: #fbbf24;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
         }
 
-        .class-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 10px;
-            margin-top: 15px;
+        .modal-overlay.active {
+            display: flex;
         }
 
-        .class-item {
-            background: rgba(15, 52, 96, 0.5);
-            padding: 12px;
-            border-radius: 8px;
+        .modal {
+            background: #fff;
+            border-radius: 16px;
+            padding: 24px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 20px;
         }
 
-        .class-name {
-            font-weight: 500;
-            color: #e2e8f0;
-            font-size: 0.85rem;
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 600;
         }
 
-        .class-count {
-            background: #e94560;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.85rem;
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 16px;
         }
 
         .form-group label {
             display: block;
             margin-bottom: 8px;
-            color: #94a3b8;
+            font-weight: 500;
+            color: #333;
         }
 
-        .form-group select, .form-group input[type="file"] {
+        .form-group input, .form-group select {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
             border-radius: 8px;
-            border: 1px solid #0f3460;
-            background: #16213e;
-            color: #fff;
             font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #22c55e;
+        }
+
+        .form-group input[type="file"] {
+            padding: 10px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-state i {
+            font-size: 64px;
+            color: #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 8px;
+            color: #333;
         }
 
         .status-message {
@@ -407,123 +608,252 @@
 
         .status-message.success {
             display: block;
-            background: rgba(74, 222, 128, 0.2);
-            border: 1px solid #4ade80;
-            color: #4ade80;
+            background: #dcfce7;
+            border: 1px solid #22c55e;
+            color: #166534;
         }
 
         .status-message.error {
             display: block;
-            background: rgba(239, 68, 68, 0.2);
+            background: #fef2f2;
             border: 1px solid #ef4444;
-            color: #ef4444;
+            color: #dc2626;
+        }
+
+        .hidden {
+            display: none !important;
         }
 
         .no-reference {
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(0,0,0,0.5);
-            color: #64748b;
+            background: #f1f5f9;
+            color: #94a3b8;
             aspect-ratio: 4/3;
         }
 
-        .hidden {
-            display: none !important;
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #22c55e;
+        }
+
+        .stat-card .label {
+            color: #666;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+
+        .stat-card .value {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #333;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Scanner de Sucata Eletronica</h1>
-            <p class="subtitle">Sistema de classificacao por similaridade de imagem usando IA</p>
-        </header>
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">MRX</div>
+            <span class="logo-text">MRX SCAN</span>
+        </div>
+        <nav class="nav-tabs">
+            <button class="nav-tab active" data-view="scanner">
+                <i class="fas fa-camera"></i> Scanner
+            </button>
+            <button class="nav-tab" data-view="dataset">
+                <i class="fas fa-folder"></i> Dataset
+            </button>
+        </nav>
+        <div class="header-actions">
+            <button class="btn btn-secondary" id="retrainBtn">
+                <i class="fas fa-sync-alt"></i> Retreinar
+            </button>
+        </div>
+    </header>
 
-        <div class="main-content">
-            <div class="panel">
-                <h2 class="panel-title">Camera Scanner</h2>
-                
-                <div class="camera-container">
-                    <video id="video" autoplay playsinline></video>
-                    <canvas id="canvas"></canvas>
-                    <div class="camera-overlay" id="cameraOverlay">
-                        Clique em "Iniciar Camera" para comecar
-                    </div>
-                </div>
-
-                <div class="controls">
-                    <button class="btn btn-primary" id="startCamera">Iniciar Camera</button>
-                    <button class="btn btn-primary" id="captureBtn" disabled>Capturar e Classificar</button>
-                    <button class="btn btn-secondary" id="stopCamera" disabled>Parar Camera</button>
-                </div>
-
-                <div class="loading" id="loading">
-                    <div class="spinner"></div>
-                    <p>Processando imagem com IA...</p>
-                </div>
-
-                <div class="result-section" id="resultSection">
-                    <div class="result-header">
-                        <div class="result-classification" id="resultClass">-</div>
-                        <div class="result-confidence">Similaridade: <span id="resultScore">0</span>%</div>
-                    </div>
-
-                    <div class="comparison-container">
-                        <div class="image-box">
-                            <div class="image-box-title">Imagem Capturada</div>
-                            <img id="capturedImage" src="" alt="Imagem capturada">
-                            <div class="image-box-info">Material escaneado</div>
+    <div class="main-container">
+        <div class="view-container active" id="scannerView">
+            <h1 class="page-title">Scanner de Classificacao</h1>
+            <p class="page-subtitle">Capture uma imagem para classificar automaticamente</p>
+            
+            <div class="scanner-container">
+                <div class="panel">
+                    <h2 class="panel-title">
+                        <i class="fas fa-camera"></i> Camera
+                    </h2>
+                    
+                    <div class="camera-container">
+                        <video id="video" autoplay playsinline></video>
+                        <canvas id="canvas"></canvas>
+                        <div class="camera-overlay" id="cameraOverlay">
+                            <i class="fas fa-camera"></i>
+                            <span>Clique em "Iniciar Camera"</span>
                         </div>
-                        <div class="image-box">
-                            <div class="image-box-title reference">Imagem de Referencia (IA)</div>
-                            <img id="referenceImage" src="" alt="Imagem de referencia" class="hidden">
-                            <div class="no-reference hidden" id="noReference">Sem imagem de referencia</div>
-                            <div class="image-box-info">
-                                <span id="refClass">-</span> | Similaridade: <strong id="refScore">0</strong>%
+                    </div>
+
+                    <div class="controls">
+                        <button class="btn btn-primary" id="startCamera">
+                            <i class="fas fa-play"></i> Iniciar Camera
+                        </button>
+                        <button class="btn btn-primary" id="captureBtn" disabled>
+                            <i class="fas fa-camera"></i> Capturar
+                        </button>
+                        <button class="btn btn-secondary" id="stopCamera" disabled>
+                            <i class="fas fa-stop"></i> Parar
+                        </button>
+                    </div>
+
+                    <div class="loading" id="loading">
+                        <div class="spinner"></div>
+                        <p>Processando com IA...</p>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2 class="panel-title">
+                        <i class="fas fa-chart-bar"></i> Resultado
+                    </h2>
+
+                    <div id="resultPlaceholder">
+                        <div class="empty-state">
+                            <i class="fas fa-image"></i>
+                            <h3>Aguardando captura</h3>
+                            <p>Capture uma imagem para ver a classificacao</p>
+                        </div>
+                    </div>
+
+                    <div class="result-section" id="resultSection">
+                        <div class="result-header">
+                            <div class="result-classification" id="resultClass">-</div>
+                            <div class="result-confidence">Similaridade: <span id="resultScore">0</span>%</div>
+                        </div>
+
+                        <div class="comparison-container">
+                            <div class="image-box">
+                                <div class="image-box-title">Imagem Capturada</div>
+                                <img id="capturedImage" src="" alt="Imagem capturada">
+                            </div>
+                            <div class="image-box">
+                                <div class="image-box-title reference">Referencia (IA)</div>
+                                <img id="referenceImage" src="" alt="Referencia" class="hidden">
+                                <div class="no-reference hidden" id="noReference">Sem referencia</div>
+                                <div class="image-box-info">
+                                    <span id="refClass">-</span> | <strong id="refScore">0</strong>%
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="top-matches">
-                        <h4>Top 3 Imagens Mais Similares:</h4>
-                        <div id="topMatches"></div>
+                        <div class="top-matches">
+                            <h4>Top 3 Correspondencias:</h4>
+                            <div id="topMatches"></div>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="panel">
-                <div class="tabs">
-                    <button class="tab active" data-tab="dataset">Dataset</button>
-                    <button class="tab" data-tab="upload">Upload</button>
+        <div class="view-container" id="datasetView">
+            <div id="folderListView">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div>
+                        <h1 class="page-title">Gestao de Dataset</h1>
+                        <p class="page-subtitle">Gerencie as pastas e imagens de classificacao</p>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button class="btn btn-secondary" id="createFolderBtn">
+                            <i class="fas fa-folder-plus"></i> Criar Pasta
+                        </button>
+                        <button class="btn btn-primary" id="uploadImagesBtn">
+                            <i class="fas fa-upload"></i> Adicionar Imagens
+                        </button>
+                    </div>
                 </div>
 
-                <div class="tab-content active" id="datasetTab">
-                    <h2 class="panel-title">Classificacoes Disponiveis</h2>
-                    <div id="noDatasetWarning" class="no-dataset-warning hidden">
-                        Nenhuma imagem no dataset. Adicione imagens para treinar o sistema.
-                    </div>
-                    <div class="class-list" id="classList"></div>
-                    <div class="controls" style="margin-top: 20px;">
-                        <button class="btn btn-secondary" id="refreshClasses">Atualizar Lista</button>
-                        <button class="btn btn-secondary" id="retrainBtn">Retreinar Embeddings</button>
-                    </div>
-                </div>
+                <div class="stats-cards" id="statsCards"></div>
 
-                <div class="tab-content" id="uploadTab">
-                    <h2 class="panel-title">Adicionar ao Dataset</h2>
-                    <div class="form-group">
-                        <label for="uploadClass">Classificacao:</label>
-                        <select id="uploadClass"></select>
-                    </div>
-                    <div class="form-group">
-                        <label for="uploadImage">Imagem:</label>
-                        <input type="file" id="uploadImage" accept="image/*">
-                    </div>
-                    <button class="btn btn-primary" id="uploadBtn">Enviar Imagem</button>
-                    <div class="status-message" id="uploadStatus"></div>
+                <div class="folder-grid" id="folderGrid"></div>
+
+                <div class="empty-state hidden" id="emptyFolders">
+                    <i class="fas fa-folder-open"></i>
+                    <h3>Nenhuma pasta encontrada</h3>
+                    <p>Crie uma nova pasta de classificacao para comecar</p>
                 </div>
             </div>
+
+            <div id="folderContentView" class="hidden">
+                <div class="breadcrumb">
+                    <a id="backToFolders"><i class="fas fa-arrow-left"></i> Voltar</a>
+                    <span>/</span>
+                    <span id="currentFolderName">-</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h1 class="page-title" id="folderTitle">-</h1>
+                    <button class="btn btn-primary" id="uploadToFolderBtn">
+                        <i class="fas fa-upload"></i> Adicionar Imagens
+                    </button>
+                </div>
+
+                <div class="image-grid" id="imageGrid"></div>
+
+                <div class="empty-state hidden" id="emptyImages">
+                    <i class="fas fa-images"></i>
+                    <h3>Nenhuma imagem</h3>
+                    <p>Adicione imagens a esta pasta</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="createFolderModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Criar Nova Pasta</h3>
+                <button class="modal-close" id="closeCreateModal">&times;</button>
+            </div>
+            <form id="createFolderForm">
+                <div class="form-group">
+                    <label for="folderName">Nome da Classificacao:</label>
+                    <input type="text" id="folderName" placeholder="Ex: HIGH GRADE" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-folder-plus"></i> Criar Pasta
+                </button>
+            </form>
+            <div class="status-message" id="createStatus"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">Adicionar Imagens</h3>
+                <button class="modal-close" id="closeUploadModal">&times;</button>
+            </div>
+            <form id="uploadForm">
+                <div class="form-group">
+                    <label for="uploadClass">Classificacao:</label>
+                    <select id="uploadClass" required></select>
+                </div>
+                <div class="form-group">
+                    <label for="uploadImages">Imagens (multipla selecao):</label>
+                    <input type="file" id="uploadImages" accept="image/*" multiple required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-upload"></i> Enviar Imagens
+                </button>
+            </form>
+            <div class="status-message" id="uploadStatus"></div>
         </div>
     </div>
 
@@ -531,44 +861,8 @@
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        const startCameraBtn = document.getElementById('startCamera');
-        const stopCameraBtn = document.getElementById('stopCamera');
-        const captureBtn = document.getElementById('captureBtn');
-        const cameraOverlay = document.getElementById('cameraOverlay');
-        const resultSection = document.getElementById('resultSection');
-        const loading = document.getElementById('loading');
-
         let stream = null;
-        let lastCapturedBlob = null;
-
-        async function startCamera() {
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
-                });
-                video.srcObject = stream;
-                cameraOverlay.classList.add('hidden');
-                startCameraBtn.disabled = true;
-                stopCameraBtn.disabled = false;
-                captureBtn.disabled = false;
-            } catch (err) {
-                console.error('Error accessing camera:', err);
-                cameraOverlay.textContent = 'Erro ao acessar camera: ' + err.message;
-            }
-        }
-
-        function stopCamera() {
-            if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-                stream = null;
-            }
-            video.srcObject = null;
-            cameraOverlay.classList.remove('hidden');
-            cameraOverlay.textContent = 'Camera desligada';
-            startCameraBtn.disabled = false;
-            stopCameraBtn.disabled = true;
-            captureBtn.disabled = true;
-        }
+        let currentFolder = null;
 
         function getImageUrl(path) {
             if (!path) return '';
@@ -579,18 +873,57 @@
             return '/' + cleanPath;
         }
 
-        async function captureAndClassify() {
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+                tab.classList.add('active');
+                const viewId = tab.dataset.view + 'View';
+                document.getElementById(viewId).classList.add('active');
+                if (tab.dataset.view === 'dataset') {
+                    loadFolders();
+                }
+            });
+        });
+
+        document.getElementById('startCamera').addEventListener('click', async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+                });
+                video.srcObject = stream;
+                document.getElementById('cameraOverlay').classList.add('hidden');
+                document.getElementById('startCamera').disabled = true;
+                document.getElementById('stopCamera').disabled = false;
+                document.getElementById('captureBtn').disabled = false;
+            } catch (err) {
+                alert('Erro ao acessar camera: ' + err.message);
+            }
+        });
+
+        document.getElementById('stopCamera').addEventListener('click', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            video.srcObject = null;
+            document.getElementById('cameraOverlay').classList.remove('hidden');
+            document.getElementById('startCamera').disabled = false;
+            document.getElementById('stopCamera').disabled = true;
+            document.getElementById('captureBtn').disabled = true;
+        });
+
+        document.getElementById('captureBtn').addEventListener('click', async () => {
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             ctx.drawImage(video, 0, 0);
             
-            loading.classList.add('active');
-            resultSection.classList.remove('active');
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('resultSection').classList.remove('active');
+            document.getElementById('resultPlaceholder').classList.add('hidden');
             
             canvas.toBlob(async (blob) => {
-                lastCapturedBlob = blob;
-                const capturedUrl = URL.createObjectURL(blob);
-                document.getElementById('capturedImage').src = capturedUrl;
+                document.getElementById('capturedImage').src = URL.createObjectURL(blob);
                 
                 const formData = new FormData();
                 formData.append('image', blob, 'capture.jpg');
@@ -602,7 +935,7 @@
                     });
                     
                     const result = await response.json();
-                    loading.classList.remove('active');
+                    document.getElementById('loading').classList.remove('active');
                     
                     if (result.has_dataset) {
                         document.getElementById('resultClass').textContent = result.classification || 'Desconhecido';
@@ -620,8 +953,6 @@
                         } else {
                             refImage.classList.add('hidden');
                             noRef.classList.remove('hidden');
-                            document.getElementById('refClass').textContent = '-';
-                            document.getElementById('refScore').textContent = '0';
                         }
                         
                         const topMatchesContainer = document.getElementById('topMatches');
@@ -643,140 +974,259 @@
                                 `;
                                 topMatchesContainer.appendChild(div);
                             });
-                        } else {
-                            topMatchesContainer.innerHTML = '<p style="color: #fbbf24; text-align: center;">Nenhuma correspondencia encontrada.</p>';
                         }
                     } else {
                         document.getElementById('resultClass').textContent = 'Dataset vazio';
                         document.getElementById('resultScore').textContent = '0';
                         document.getElementById('referenceImage').classList.add('hidden');
                         document.getElementById('noReference').classList.remove('hidden');
-                        document.getElementById('topMatches').innerHTML = '<p style="color: #fbbf24; text-align: center;">Adicione imagens ao dataset para classificar.</p>';
+                        document.getElementById('topMatches').innerHTML = '<p style="color: #666; text-align: center;">Adicione imagens ao dataset primeiro.</p>';
                     }
                     
-                    resultSection.classList.add('active');
+                    document.getElementById('resultSection').classList.add('active');
                 } catch (err) {
-                    loading.classList.remove('active');
-                    console.error('Error classifying:', err);
-                    alert('Erro ao classificar imagem: ' + err.message);
+                    document.getElementById('loading').classList.remove('active');
+                    alert('Erro: ' + err.message);
                 }
             }, 'image/jpeg', 0.9);
-        }
+        });
 
-        async function loadClasses() {
+        async function loadFolders() {
             try {
                 const response = await fetch('/dataset/classes');
                 const data = await response.json();
                 
-                const classList = document.getElementById('classList');
-                const uploadClass = document.getElementById('uploadClass');
-                const noDatasetWarning = document.getElementById('noDatasetWarning');
+                const grid = document.getElementById('folderGrid');
+                const emptyState = document.getElementById('emptyFolders');
+                const select = document.getElementById('uploadClass');
+                const statsCards = document.getElementById('statsCards');
                 
-                classList.innerHTML = '';
-                uploadClass.innerHTML = '';
+                grid.innerHTML = '';
+                select.innerHTML = '';
                 
                 let totalImages = 0;
+                data.classes.forEach(cls => totalImages += cls.image_count);
                 
-                data.classes.forEach(cls => {
-                    totalImages += cls.image_count;
-                    
-                    const div = document.createElement('div');
-                    div.className = 'class-item';
-                    div.innerHTML = `
-                        <span class="class-name">${cls.name}</span>
-                        <span class="class-count">${cls.image_count}</span>
-                    `;
-                    classList.appendChild(div);
-                    
-                    const option = document.createElement('option');
-                    option.value = cls.name;
-                    option.textContent = cls.name;
-                    uploadClass.appendChild(option);
-                });
+                statsCards.innerHTML = `
+                    <div class="stat-card">
+                        <div class="label">Total de Pastas</div>
+                        <div class="value">${data.classes.length}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="label">Total de Imagens</div>
+                        <div class="value">${totalImages}</div>
+                    </div>
+                `;
                 
-                if (totalImages === 0) {
-                    noDatasetWarning.classList.remove('hidden');
+                if (data.classes.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    grid.classList.add('hidden');
                 } else {
-                    noDatasetWarning.classList.add('hidden');
+                    emptyState.classList.add('hidden');
+                    grid.classList.remove('hidden');
+                    
+                    data.classes.forEach(cls => {
+                        const card = document.createElement('div');
+                        card.className = 'folder-card';
+                        card.innerHTML = `
+                            <div class="folder-icon"><i class="fas fa-folder"></i></div>
+                            <div class="folder-name">${cls.name}</div>
+                            <div class="folder-count"><span>${cls.image_count}</span> imagens</div>
+                        `;
+                        card.addEventListener('click', () => openFolder(cls.name));
+                        grid.appendChild(card);
+                        
+                        const option = document.createElement('option');
+                        option.value = cls.name;
+                        option.textContent = cls.name;
+                        select.appendChild(option);
+                    });
                 }
             } catch (err) {
-                console.error('Error loading classes:', err);
+                console.error('Error loading folders:', err);
             }
         }
 
-        async function uploadImage() {
-            const classification = document.getElementById('uploadClass').value;
-            const fileInput = document.getElementById('uploadImage');
-            const statusDiv = document.getElementById('uploadStatus');
-            
-            if (!fileInput.files.length) {
-                statusDiv.className = 'status-message error';
-                statusDiv.textContent = 'Selecione uma imagem';
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('image', fileInput.files[0]);
-            formData.append('classification', classification);
+        async function openFolder(folderName) {
+            currentFolder = folderName;
+            document.getElementById('folderListView').classList.add('hidden');
+            document.getElementById('folderContentView').classList.remove('hidden');
+            document.getElementById('currentFolderName').textContent = folderName;
+            document.getElementById('folderTitle').textContent = folderName;
             
             try {
-                const response = await fetch('/dataset/upload', {
+                const response = await fetch(`/dataset/images/${encodeURIComponent(folderName)}`);
+                const data = await response.json();
+                
+                const grid = document.getElementById('imageGrid');
+                const emptyState = document.getElementById('emptyImages');
+                
+                grid.innerHTML = '';
+                
+                if (data.images.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    grid.classList.add('hidden');
+                } else {
+                    emptyState.classList.add('hidden');
+                    grid.classList.remove('hidden');
+                    
+                    data.images.forEach(img => {
+                        const card = document.createElement('div');
+                        card.className = 'image-card';
+                        card.innerHTML = `
+                            <img src="${img.path}" alt="${img.filename}" loading="lazy">
+                            <div class="image-card-info">
+                                <span class="image-card-name">${img.filename}</span>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                }
+            } catch (err) {
+                console.error('Error loading folder images:', err);
+            }
+        }
+
+        document.getElementById('backToFolders').addEventListener('click', () => {
+            document.getElementById('folderContentView').classList.add('hidden');
+            document.getElementById('folderListView').classList.remove('hidden');
+            currentFolder = null;
+            loadFolders();
+        });
+
+        document.getElementById('createFolderBtn').addEventListener('click', () => {
+            document.getElementById('createFolderModal').classList.add('active');
+            document.getElementById('createStatus').className = 'status-message';
+        });
+
+        document.getElementById('closeCreateModal').addEventListener('click', () => {
+            document.getElementById('createFolderModal').classList.remove('active');
+        });
+
+        document.getElementById('createFolderForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('folderName').value.trim();
+            const status = document.getElementById('createStatus');
+            
+            try {
+                const formData = new FormData();
+                formData.append('name', name);
+                
+                const response = await fetch('/dataset/create', {
                     method: 'POST',
                     body: formData
                 });
                 
                 const result = await response.json();
                 
-                if (result.success) {
-                    statusDiv.className = 'status-message success';
-                    statusDiv.textContent = result.message;
-                    fileInput.value = '';
-                    loadClasses();
+                if (response.ok) {
+                    status.className = 'status-message success';
+                    status.textContent = 'Pasta criada com sucesso!';
+                    document.getElementById('folderName').value = '';
+                    loadFolders();
+                    setTimeout(() => {
+                        document.getElementById('createFolderModal').classList.remove('active');
+                    }, 1500);
                 } else {
-                    statusDiv.className = 'status-message error';
-                    statusDiv.textContent = result.detail || 'Erro ao enviar';
+                    status.className = 'status-message error';
+                    status.textContent = result.detail || 'Erro ao criar pasta';
                 }
             } catch (err) {
-                statusDiv.className = 'status-message error';
-                statusDiv.textContent = 'Erro: ' + err.message;
+                status.className = 'status-message error';
+                status.textContent = 'Erro: ' + err.message;
             }
-        }
+        });
 
-        async function retrainEmbeddings() {
+        document.getElementById('uploadImagesBtn').addEventListener('click', () => {
+            document.getElementById('uploadModal').classList.add('active');
+            document.getElementById('uploadStatus').className = 'status-message';
+        });
+
+        document.getElementById('uploadToFolderBtn').addEventListener('click', () => {
+            document.getElementById('uploadClass').value = currentFolder;
+            document.getElementById('uploadModal').classList.add('active');
+            document.getElementById('uploadStatus').className = 'status-message';
+        });
+
+        document.getElementById('closeUploadModal').addEventListener('click', () => {
+            document.getElementById('uploadModal').classList.remove('active');
+        });
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const classification = document.getElementById('uploadClass').value;
+            const files = document.getElementById('uploadImages').files;
+            const status = document.getElementById('uploadStatus');
+            
+            if (files.length === 0) {
+                status.className = 'status-message error';
+                status.textContent = 'Selecione pelo menos uma imagem';
+                return;
+            }
+            
+            try {
+                const formData = new FormData();
+                formData.append('classification', classification);
+                for (let i = 0; i < files.length; i++) {
+                    formData.append('images', files[i]);
+                }
+                
+                const response = await fetch('/dataset/upload-multiple', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    status.className = 'status-message success';
+                    status.textContent = result.message;
+                    document.getElementById('uploadImages').value = '';
+                    
+                    if (currentFolder === classification) {
+                        openFolder(currentFolder);
+                    }
+                    loadFolders();
+                    
+                    setTimeout(() => {
+                        document.getElementById('uploadModal').classList.remove('active');
+                    }, 1500);
+                } else {
+                    status.className = 'status-message error';
+                    status.textContent = result.detail || 'Erro ao enviar imagens';
+                }
+            } catch (err) {
+                status.className = 'status-message error';
+                status.textContent = 'Erro: ' + err.message;
+            }
+        });
+
+        document.getElementById('retrainBtn').addEventListener('click', async () => {
             const btn = document.getElementById('retrainBtn');
             btn.disabled = true;
-            btn.textContent = 'Retreinando...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Retreinando...';
             
             try {
                 const response = await fetch('/dataset/retrain', { method: 'POST' });
                 const result = await response.json();
                 alert(result.message || 'Embeddings atualizados!');
             } catch (err) {
-                alert('Erro ao retreinar: ' + err.message);
+                alert('Erro: ' + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sync-alt"></i> Retreinar';
             }
-            
-            btn.disabled = false;
-            btn.textContent = 'Retreinar Embeddings';
-        }
+        });
 
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.tab + 'Tab').classList.add('active');
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
             });
         });
 
-        startCameraBtn.addEventListener('click', startCamera);
-        stopCameraBtn.addEventListener('click', stopCamera);
-        captureBtn.addEventListener('click', captureAndClassify);
-        document.getElementById('refreshClasses').addEventListener('click', loadClasses);
-        document.getElementById('uploadBtn').addEventListener('click', uploadImage);
-        document.getElementById('retrainBtn').addEventListener('click', retrainEmbeddings);
-
-        loadClasses();
+        loadFolders();
     </script>
 </body>
 </html>
