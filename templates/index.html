@@ -6,6 +6,204 @@
     <title>MRX SCAN - Sistema de Classificacao</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+
+        /* ===== FIX MOBILE & RESPONSIVIDADE ===== */
+
+/* Evita scroll horizontal */
+/* ============================= */
+/* CORREÇÃO DEFINITIVA MOBILE */
+/* ============================= */
+
+/* Garante zero scroll horizontal */
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+}
+
+/* HEADER */
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .logo {
+        justify-content: center;
+    }
+
+    .nav-tabs {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .nav-tab {
+        flex: 1 1 48%;
+        text-align: center;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .header-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ============================= */
+/* DATASET – BARRA SUPERIOR */
+/* ============================= */
+
+/* SOBRESCREVE O inline-style PROBLEMÁTICO */
+@media (max-width: 768px) {
+    #datasetView > #folderListView > div:first-child {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 16px;
+    }
+
+    #datasetView h1.page-title {
+        text-align: center;
+    }
+
+    #datasetView .page-subtitle {
+        text-align: center;
+    }
+
+    #datasetView > #folderListView > div:first-child > div:last-child {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+
+    #datasetView > #folderListView > div:first-child button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ============================= */
+/* CARDS DE ESTATÍSTICA */
+/* ============================= */
+@media (max-width: 768px) {
+    .stats-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================= */
+/* GRID DE PASTAS */
+/* ============================= */
+@media (max-width: 768px) {
+    .folder-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .folder-card {
+        padding: 16px;
+    }
+}
+
+/* ============================= */
+/* GRID DE IMAGENS */
+/* ============================= */
+@media (max-width: 768px) {
+    .image-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+}
+
+/* ============================= */
+/* BOTÕES GERAIS */
+/* ============================= */
+@media (max-width: 768px) {
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .controls .btn {
+        flex: 1 1 100%;
+    }
+}
+
+/* Garante que tudo respeite a tela */
+.main-container,
+.panel,
+.result-section,
+.camera-container,
+.image-box,
+.image-grid,
+.folder-grid {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Imagens e câmera nunca passam da largura */
+img, video, canvas {
+    max-width: 100%;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    display: block;
+}
+
+/* Caixa da câmera — mantém proporção e não estoura */
+.camera-container {
+    width: 100%;
+    aspect-ratio: 4/3;
+}
+
+/* Ajuste do preview */
+#video,
+#canvas,
+#capturedImage,
+#referenceImage {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Grid do scanner — força coluna única no mobile */
+@media (max-width: 768px) {
+    .scanner-container {
+        grid-template-columns: 1fr !important;
+        gap: 16px;
+    }
+
+    .main-container {
+        padding: 12px;
+    }
+
+    /* Botões quebram corretamente */
+    .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .controls .btn {
+        flex: 1 1 48%;
+    }
+
+    /* Grid de imagens do dataset */
+    .image-grid {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    }
+
+    .folder-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    }
+}
+
         * {
             margin: 0;
             padding: 0;
@@ -750,6 +948,91 @@
             aspect-ratio: 4/3;
             object-fit: cover;
         }
+
+        /* ============================= */
+/* MODAL CAPTURA MULTIPLA */
+/* ============================= */
+
+#captureModal .modal {
+    width: 95%;
+    max-width: 600px;
+    padding: 16px;
+}
+
+@media (max-width: 768px) {
+    #captureModal .modal {
+        max-height: 95vh;
+        overflow-y: auto;
+    }
+
+    /* Força quebra dos botões */
+    #captureModal .modal > div[style*="display: flex"] {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+
+    #captureModal .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    #captureModal video {
+        max-height: 240px;
+    }
+}
+/* ============================= */
+/* TOP 3 CORRESPONDÊNCIAS */
+/* ============================= */
+
+.match-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.match-card img {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.match-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0; /* ESSENCIAL para flex no mobile */
+    width: 100%;
+}
+
+.match-info strong {
+    font-size: 15px;
+    line-height: 1.2;
+}
+
+.match-info span {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.3;
+
+    /* 🔑 CORREÇÃO DO TEXTO QUEBRANDO */
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
+/* Mobile refinado */
+@media (max-width: 768px) {
+    .match-card {
+        align-items: flex-start;
+    }
+
+    .match-info span {
+        font-size: 11px;
+    }
+}
+
     </style>
 </head>
 <body>
@@ -986,7 +1269,8 @@
                 <button class="btn btn-primary" id="startCaptureCamera">
                     <i class="fas fa-play"></i> Iniciar Camera
                 </button>
-                <button class="btn btn-primary" id="takeCapturePhoto" disabled>
+                <button type="button" class="btn btn-primary" id="takeCapturePhoto" disabled>
+
                     <i class="fas fa-camera"></i> Capturar Foto
                 </button>
                 <button class="btn btn-secondary" id="stopCaptureCamera" disabled>
@@ -1582,6 +1866,14 @@
         });
 
         loadFolders();
+
+        // Impede fechamento do modal ao clicar dentro dele
+// Impede fechamento do modal ao clicar dentro dele
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', e => e.stopPropagation());
+        });
+
+
     </script>
 </body>
 </html>
