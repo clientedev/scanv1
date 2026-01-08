@@ -239,6 +239,32 @@ async def get_class_images(class_name: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/images/{class_name}/{filename}")
+async def get_image(class_name: str, filename: str):
+    """
+    Serve image directly from database
+    """
+    try:
+        engine = get_engine()
+        image_data = engine.get_image_data(class_name, filename)
+        
+        if not image_data:
+            raise HTTPException(status_code=404, detail="Image not found")
+            
+        from fastapi.responses import Response
+        import mimetypes
+        
+        content_type, _ = mimetypes.guess_type(filename)
+        if not content_type:
+            content_type = "image/jpeg"
+            
+        return Response(content=image_data, media_type=content_type)
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/dataset/capture-multiple")
 async def capture_multiple_images(
     images: List[UploadFile] = File(...),
