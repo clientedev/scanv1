@@ -100,13 +100,6 @@ class EmbeddingEngine:
             for class_name in self.embeddings_cache:
                 self.embeddings_cache[class_name] = np.array(self.embeddings_cache[class_name])
                 
-            # Load Image Metadata (DatasetImage) to map embeddings to images
-            # Note: The order of embeddings in DB might differentiate from images if not careful.
-            # Ideally we should link them. 
-            # Current simplified approach assumes we can just reload all embeddings and all images.
-            # But the 'classify' method assumes index matching.
-            # TO FIX THIS properly: We will reload EVERYTHING from DatasetImage table actually.
-            
             self._rebuild_cache_from_images_table()
             
             print("Embeddings loaded from DB")
@@ -118,114 +111,9 @@ class EmbeddingEngine:
     def _rebuild_cache_from_images_table(self):
         """Rebuild in-memory cache strictly from DatasetImage table to ensure consistency"""
         print("Rebuilding cache from DatasetImage table...")
-        self.embeddings_cache = {}
-        self.image_paths_cache = {}
         
-        # Get all images ordered by ID to ensure consistent order
-        images = self.db_session.query(DatasetImage).order_by(DatasetImage.id).all()
-        
-        temp_embeddings = {}
-        
-        for img in images:
-            if not img.classification:
-                continue
-                
-            # If image has no embedding but we have the image data, we might need to regenerate it
-            # But for now assuming we have a separate way to store/retrieve embeddings or regenerate them
-            # The original code stored embeddings separately. 
-            # We need to find the corresponding embedding.
-            pass
-
-        # Use the Embedding table for actual vectors, assuming 1:1 mapped logic or simple retrieval
-        # Better approach for this refactor:
-        # Load ALL Embeddings from 'Embedding' table which are vectors properly stored.
-        # But wait, the original code had a disconnect between 'embeddings.npy' and 'file list'.
-        # We need to robustly fix this.
-        
-        # NEW STRATEGY:
-        # 1. Load all DatasetImage records.
-        # 2. If an image doesn't have a corresponding record in 'Embedding' (conceptually), generate it.
-        # 3. Actually, let's keep it simple and efficient. Use 'Embedding' table for search.
-        # 4. We need to know which Image corresponds to which Embedding index.
-        
-        # Since the original system just append-only'd to .npy files and .json lists, 
-        # let's try to maintain that structure in memory but backed by DB rows.
-        
-        # We will fetch everything from Embedding table.
-        # We ALSO need the image filenames/ids to return in the API.
-        
-        # Let's query Embedding table. It has 'classification' and 'embedding_data'.
-        # It DOES NOT have a link to DatasetImage ID. This is a schema limitations of original code.
-        # The user wants us to fix persistence.
-        # We will ONLY use DatasetImage table. We will store embedding IN DatasetImage or re-generate on startup?
-        # Re-generating on startup is too slow for many images.
-        # We should add 'embedding_data' to DatasetImage or link them.
-        # However, I cannot change schema easily without migrations.
-        # Wait, 'Embedding' table exists. Let's use it.
-        # BUT, how to link?
-        
-        # Let's look at `create_tables.py`:
-        # DatasetImage: id, filename, classification, image_data
-        # Embedding: id, classification, embedding_data
-        
-        # The PROPER fix is to store embedding with the image or link them.
-        # Given I can't easily run migrations on production easily without risk,
-        # I will use a logic of: 
-        # "Load all DatasetImages. If count(DatasetImages) != count(Embeddings) for a class, REGENERATE ALL for that class."
-        # This ensures consistency.
-        
-        classes = self.db_session.query(DatasetImage.classification).distinct().all()
-        classes = [c[0] for c in classes]
-        
-        for class_name in classes:
-            images = self.db_session.query(DatasetImage).filter_by(classification=class_name).order_by(DatasetImage.id).all()
-            
-            emb_list = []
-            path_list = []
-            
-            needs_update = False
-            
-            for img in images:
-                # We don't have the embedding stored with the image in current schema.
-                # We'll need to generate it if we want to be sure, or store it.
-                # To make this performant and robust: 
-                # Let's just generate embeddings on the fly if missing? No, too slow.
-                
-                # We will check if we have pre-calculated embeddings in the embeddings table.
-                # But matching them index-wise is risky if rows were deleted.
-                
-                # CRITICAL DECISION:
-                # To guarantee consistency, I will recalculate embeddings on startup IF the counts mismatch. 
-                # If counts match, we assume order by ID is preserved (since both inserted sequentially).
-                pass
-
-        # Actually, let's just stick to the original 'embeddings' table as a cache of vectors.
-        # But we need to link specific embedding to specific image for "Reference Image" feature.
-        
-        # Let's simplify efficiently:
-        # We will rely on `DatasetImage` as the source of truth.
-        # On startup, we iterate all DatasetImages.
-        # We check if we have an Embedding record for this image? No foreign key.
-        
-        # OK, I will modify the logic to ONLY use `DatasetImage` and generate embeddings on startup?
-        # No, that's too slow for production.
-        
-        # I will store the embedding IN the `DatasetImage` table if possible? 
-        # `DatasetImage` has `image_data` (blob).
-        # `Embedding` has `embedding_data` (blob).
-        
-        # Let's just wipe the `Embedding` table and regenerate from `DatasetImage` on startup if it seems empty/inconsistent?
-        # Or better: Iterate `DatasetImage`. If we have a list of `DatasetImage`, we generate embeddings in memory and
-        # cache them. If we want persistence of embeddings, we can save them to `Embedding` table.
-        
-        # Implementation Plan Revised Strategy:
-        # 1. Clear in-memory cache.
-        # 2. Query `DatasetImage` by class.
-        # 3. Query `Embedding` by class.
-        # 4. If count matches, load `Embedding`.
-        # 5. If count mismatches, regenerate all embeddings for that class from `DatasetImage` contents and update `Embedding` table.
-        
-        # This is self-healing.
+        # We assume self.embeddings_cache matches self.image_paths_cache logic
+        # But to be safe, let's sync efficiently.
         
         images_count_q = self.db_session.query(DatasetImage.classification, func.count(DatasetImage.id)).group_by(DatasetImage.classification).all()
         embeddings_count_q = self.db_session.query(Embedding.classification, func.count(Embedding.id)).group_by(Embedding.classification).all()
@@ -233,9 +121,17 @@ class EmbeddingEngine:
         img_counts = {c: n for c, n in images_count_q}
         emb_counts = {c: n for c, n in embeddings_count_q}
         
-        all_classes = set(list(img_counts.keys()) + list(emb_counts.keys()))
+        # Also ensure all explicit classes exist in cache even if empty
+        class_records = self.db_session.query(Classification).all()
+        for c_rec in class_records:
+            if c_rec.name not in self.image_paths_cache:
+                self.image_paths_cache[c_rec.name] = []
+            if c_rec.name not in self.embeddings_cache:
+                self.embeddings_cache[c_rec.name] = np.array([])
+
+        all_active_classes = set(list(img_counts.keys()) + list(emb_counts.keys()))
         
-        for class_name in all_classes:
+        for class_name in all_active_classes:
             i_count = img_counts.get(class_name, 0)
             e_count = emb_counts.get(class_name, 0)
             
@@ -309,6 +205,27 @@ class EmbeddingEngine:
             self.image_paths_cache[class_name] = paths
             print(f"Regeneration complete for {class_name}")
 
+    def create_class(self, class_name: str) -> bool:
+        """Create a new classification in the database"""
+        try:
+            existing = self.db_session.query(Classification).filter_by(name=class_name).first()
+            if existing:
+                return False
+            
+            new_class = Classification(name=class_name)
+            self.db_session.add(new_class)
+            self.db_session.commit()
+            
+            # Initialize in cache
+            self.embeddings_cache[class_name] = np.array([])
+            self.image_paths_cache[class_name] = []
+            
+            return True
+        except Exception as e:
+            self.db_session.rollback()
+            print(f"Error creating class {class_name}: {e}")
+            raise e
+
     def add_multiple_images_to_class(self, class_name: str, images_list: List[Tuple[str, bytes]]) -> List[str]:
         """
         Batch add images to a class.
@@ -317,6 +234,9 @@ class EmbeddingEngine:
         """
         import uuid
         import re
+        
+        # Ensure class exists
+        self.create_class(class_name)
         
         new_images = []
         new_embeddings = []
@@ -417,6 +337,9 @@ class EmbeddingEngine:
             if not os.path.isdir(class_path):
                 continue
                 
+            # Create the class explicitly
+            self.create_class(class_name)
+                
             # Check if we already have images for this class in DB
             count = self.db_session.query(DatasetImage).filter_by(classification=class_name).count()
             if count > 0:
@@ -455,6 +378,11 @@ class EmbeddingEngine:
             class_paths = self.image_paths_cache.get(class_name, [])
             
             if len(class_embeddings) == 0:
+                class_scores[class_name] = {
+                    "avg_similarity": 0.0,
+                    "max_similarity": 0.0,
+                    "num_samples": 0
+                }
                 continue
 
             similarities = []
@@ -560,21 +488,32 @@ class EmbeddingEngine:
             "status": "match",
             "message": "Classification successful"
         }
-
+    
     def get_class_info(self) -> List[Dict]:
-        """Get info about classes from DB/Cache"""
-        return [
-            {
+        """Get information about all classes and their image counts from DB"""
+        
+        # In DB-backed mode, we should query the Classification table plus counts
+        # But we already have in-memory chache synced on load.
+        # Let's verify against DB for robustness or just use cache.
+        # Using cache for speed.
+        
+        # However, ensure we include classes with 0 images.
+        all_keys = sorted(list(set(list(self.image_paths_cache.keys()) + list(self.embeddings_cache.keys()))))
+        
+        result = []
+        for k in all_keys:
+            count = len(self.image_paths_cache.get(k, []))
+            result.append({
                 "name": k,
-                "image_count": len(v),
-                "has_embeddings": True
-            }
-            for k, v in self.image_paths_cache.items()
-        ]
+                "image_count": count,
+                "has_embeddings": count > 0
+            })
+        return result
 
 engine = None
 
 def get_engine() -> EmbeddingEngine:
+    """Get or create the embedding engine singleton"""
     global engine
     if engine is None:
         engine = EmbeddingEngine()

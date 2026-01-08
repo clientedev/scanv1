@@ -188,19 +188,22 @@ async def get_classes():
 @app.post("/dataset/create")
 async def create_classification(name: str = Form(...)):
     """
-    Create a new classification (Just ensure DB can handle it)
+    Create a new classification folder
     """
     try:
-        # In the new DB design, classes are implicit by having images or explicit in Classes table?
-        # Ideally we should insert into Classifications table if it exists.
-        # But for now, we just ensure it's a valid folder/category concept.
+        engine = get_engine()
+        success = engine.create_class(name)
         
-        # We can implement explicit creation if we used the classification table strictly.
-        # For now, just return success as folder structure is virtualized.
+        if not success:
+            return JSONResponse(content={
+                "success": False,
+                "message": f"Classification '{name}' already exists or could not be created",
+                "path": name
+            }, status_code=400)
         
         return JSONResponse(content={
             "success": True,
-            "message": f"Classification '{name}' ready",
+            "message": f"Classification '{name}' created successfully",
             "path": name
         })
     
