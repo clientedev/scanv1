@@ -1301,6 +1301,9 @@ img, video, canvas {
             if (cleanPath.startsWith('dataset/')) {
                 return '/images/' + cleanPath.substring(8);
             }
+            if (cleanPath.startsWith('/')) {
+                return cleanPath;
+            }
             return '/' + cleanPath;
         }
 
