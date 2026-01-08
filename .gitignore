@@ -45,3 +45,4 @@ embeddings/*.json
 
 # Logs
 *.log
+*.db

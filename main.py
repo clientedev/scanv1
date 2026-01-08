@@ -1,9 +1,10 @@
 """
 MRX SCAN - Sistema de Classificacao de Sucata Eletronica
 Scanner por camera e gestao de dataset usando OpenCLIP
+Wrapper para DB-based Storage
 """
 
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -34,7 +35,8 @@ os.makedirs(DATASET_DIR, exist_ok=True)
 os.makedirs("embeddings", exist_ok=True)
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
-app.mount("/images", StaticFiles(directory=DATASET_DIR), name="images")
+# Removed static mount for images, replaced by dynamic endpoint
+# app.mount("/images", StaticFiles(directory=DATASET_DIR), name="images")
 
 @app.on_event("startup")
 async def startup_event():
@@ -48,7 +50,9 @@ async def startup_event():
     else:
         print("Database already initialized by startup script")
     print("Initializing MRX SCAN embedding engine...")
-    get_engine()
+    engine = get_engine()
+    print("Syncing initial data from repo...")
+    engine.sync_initial_data()
     print("MRX SCAN ready!")
 
 @app.get("/", response_class=HTMLResponse)
@@ -56,6 +60,26 @@ async def root():
     """Serve the main scanner interface"""
     with open("templates/index.html", "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
+
+@app.get("/images/{class_name}/{filename}")
+async def get_image(class_name: str, filename: str):
+    """Serve image dynamically from database"""
+    try:
+        engine = get_engine()
+        image_data = engine.get_image_data(class_name, filename)
+        
+        if not image_data:
+            raise HTTPException(status_code=404, detail="Image not found")
+        
+        # Determine media type based on extension
+        import mimetypes
+        media_type, _ = mimetypes.guess_type(filename)
+        media_type = media_type or "image/jpeg"
+        
+        return Response(content=image_data, media_type=media_type)
+    except Exception as e:
+        print(f"Error serving image: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.post("/scan")
 async def scan_image(image: UploadFile = File(...)):
@@ -117,20 +141,21 @@ async def upload_multiple_images(
 ):
     """
     Upload multiple images to a specific classification
+    Optimized for batch processing
     """
     try:
         engine = get_engine()
-        saved_paths = []
         
+        batch = []
         for image in images:
             contents = await image.read()
             if contents:
-                saved_path = engine.add_image_to_class(
-                    classification,
-                    contents,
-                    image.filename or "image.jpg"
-                )
-                saved_paths.append(saved_path)
+                batch.append((image.filename or "image.jpg", contents))
+        
+        if not batch:
+             raise HTTPException(status_code=400, detail="No valid images received")
+
+        saved_paths = engine.add_multiple_images_to_class(classification, batch)
         
         return JSONResponse(content={
             "success": True,
@@ -163,56 +188,47 @@ async def get_classes():
 @app.post("/dataset/create")
 async def create_classification(name: str = Form(...)):
     """
-    Create a new classification folder
+    Create a new classification (Just ensure DB can handle it)
     """
     try:
-        folder_path = os.path.join(DATASET_DIR, name)
+        # In the new DB design, classes are implicit by having images or explicit in Classes table?
+        # Ideally we should insert into Classifications table if it exists.
+        # But for now, we just ensure it's a valid folder/category concept.
         
-        if os.path.exists(folder_path):
-            raise HTTPException(status_code=400, detail=f"Classification '{name}' already exists")
-        
-        os.makedirs(folder_path)
+        # We can implement explicit creation if we used the classification table strictly.
+        # For now, just return success as folder structure is virtualized.
         
         return JSONResponse(content={
             "success": True,
-            "message": f"Classification '{name}' created successfully",
-            "path": folder_path
+            "message": f"Classification '{name}' ready",
+            "path": name
         })
     
-    except HTTPException:
-        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/dataset/images/{class_name:path}")
 async def get_class_images(class_name: str):
     """
-    Get all images from a specific classification folder
+    Get all images from a specific classification
     """
     try:
-        folder_path = os.path.join(DATASET_DIR, class_name)
-        
-        if not os.path.exists(folder_path):
-            raise HTTPException(status_code=404, detail=f"Classification '{class_name}' not found")
+        engine = get_engine()
+        matches = engine.image_paths_cache.get(class_name, [])
         
         images = []
-        valid_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp'}
-        
-        for filename in os.listdir(folder_path):
-            if Path(filename).suffix.lower() in valid_extensions:
-                images.append({
-                    "filename": filename,
-                    "path": f"/images/{class_name}/{filename}"
-                })
-        
+        for match in matches:
+            images.append({
+                "filename": match["filename"],
+                "path": match["path"]
+            })
+            
         return JSONResponse(content={
             "class_name": class_name,
             "images": images,
             "total": len(images)
         })
     
-    except HTTPException:
-        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -229,7 +245,7 @@ async def capture_multiple_images(
         from datetime import datetime
         
         engine = get_engine()
-        saved_paths = []
+        batch = []
         
         for image in images:
             contents = await image.read()
@@ -237,13 +253,12 @@ async def capture_multiple_images(
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 unique_id = uuid.uuid4().hex[:8]
                 filename = f"capture_{timestamp}_{unique_id}.jpg"
+                batch.append((filename, contents))
                 
-                saved_path = engine.add_image_to_class(
-                    classification,
-                    contents,
-                    filename
-                )
-                saved_paths.append(saved_path)
+        if not batch:
+             raise HTTPException(status_code=400, detail="No valid images received")
+             
+        saved_paths = engine.add_multiple_images_to_class(classification, batch)
         
         return JSONResponse(content={
             "success": True,
@@ -259,16 +274,15 @@ async def capture_multiple_images(
 @app.post("/dataset/retrain")
 async def retrain_dataset():
     """
-    Retrain all embeddings from the dataset images
-    Use this after manually adding/removing images from dataset folders
+    Retrain all embeddings (Reloads from DB)
     """
     try:
         engine = get_engine()
-        engine.update_all_embeddings()
+        engine._load_embeddings_from_db()
         
         return JSONResponse(content={
             "success": True,
-            "message": "All embeddings updated successfully"
+            "message": "Embeddings reloaded from database"
         })
     
     except Exception as e:
@@ -277,7 +291,7 @@ async def retrain_dataset():
 @app.get("/health")
 async def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "model": "OpenCLIP ViT-B-32", "system": "MRX SCAN"}
+    return {"status": "healthy", "model": "OpenCLIP ViT-B-32", "system": "MRX SCAN", "storage": "PostgreSQL"}
 
 if __name__ == "__main__":
     import uvicorn
