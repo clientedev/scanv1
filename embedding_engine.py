@@ -205,6 +205,26 @@ class EmbeddingEngine:
             self.image_paths_cache[class_name] = paths
             print(f"Regeneration complete for {class_name}")
 
+    def generate_embeddings_batch(self, images: List[Image.Image]) -> np.ndarray:
+        """Generate embeddings for a batch of images"""
+        if not images:
+            return np.array([])
+            
+        try:
+            # Preprocess all images
+            # self.preprocess return a tensor (C, H, W)
+            # Stack to get (B, C, H, W)
+            image_tensors = torch.stack([self.preprocess(img) for img in images]).to(self.device)
+            
+            with torch.no_grad():
+                embeddings = self.model.encode_image(image_tensors)
+                embeddings = embeddings / embeddings.norm(dim=-1, keepdim=True)
+                return embeddings.cpu().numpy()
+                
+        except Exception as e:
+            print(f"Error generating batch embeddings: {e}")
+            raise e
+
     def create_class(self, class_name: str) -> bool:
         """Create a new classification in the database"""
         try:
@@ -217,8 +237,10 @@ class EmbeddingEngine:
             self.db_session.commit()
             
             # Initialize in cache
-            self.embeddings_cache[class_name] = np.array([])
-            self.image_paths_cache[class_name] = []
+            if class_name not in self.embeddings_cache:
+                self.embeddings_cache[class_name] = np.array([])
+            if class_name not in self.image_paths_cache:
+                self.image_paths_cache[class_name] = []
             
             return True
         except Exception as e:
@@ -228,7 +250,7 @@ class EmbeddingEngine:
 
     def add_multiple_images_to_class(self, class_name: str, images_list: List[Tuple[str, bytes]]) -> List[str]:
         """
-        Batch add images to a class.
+        Batch add images to a class using batch inference.
         images_list: List of (filename, bytes)
         Returns list of saved paths
         """
@@ -238,77 +260,111 @@ class EmbeddingEngine:
         # Ensure class exists
         self.create_class(class_name)
         
-        new_images = []
-        new_embeddings = []
-        saved_paths = []
-        
-        # Prepare data
-        for filename, content in images_list:
-            # 1. Sanitize filename
-            safe_filename = os.path.basename(filename)
-            safe_filename = re.sub(r'[^\w\-.]', '_', safe_filename)
-            base_name = os.path.splitext(safe_filename)[0] or 'image'
-            ext = os.path.splitext(safe_filename)[1] or '.jpg'
-            if ext.lower() not in {'.jpg', '.jpeg', '.png', '.bmp', '.webp', '.gif'}:
-                ext = '.jpg'
-                
-            unique_id = uuid.uuid4().hex[:8]
-            new_filename = f"{base_name}_{unique_id}{ext}"
+        if not images_list:
+            return []
             
-            # 2. Generate Embedding
+        print(f"Processing batch of {len(images_list)} images for {class_name}...")
+        
+        saved_paths = []
+        pil_images = []
+        valid_filenames = []
+        raw_contents = []
+        
+        # 1. Pre-process text/filenames and load PIL images
+        for filename, content in images_list:
             try:
-                vec = self.generate_embedding_from_bytes(content)
+                # Sanitize filename
+                safe_filename = os.path.basename(filename)
+                safe_filename = re.sub(r'[^\w\-.]', '_', safe_filename)
+                base_name = os.path.splitext(safe_filename)[0] or 'image'
+                ext = os.path.splitext(safe_filename)[1] or '.jpg'
+                if ext.lower() not in {'.jpg', '.jpeg', '.png', '.bmp', '.webp', '.gif'}:
+                    ext = '.jpg'
+                    
+                unique_id = uuid.uuid4().hex[:8]
+                new_filename = f"{base_name}_{unique_id}{ext}"
                 
-                # 3. Create records
-                img_record = DatasetImage(
-                    filename=new_filename,
-                    classification=class_name,
-                    image_data=content,
-                    image_path=f"/images/{class_name}/{new_filename}"  # Virtual path
-                )
-                emb_record = Embedding(
-                    classification=class_name,
-                    embedding_data=vec.tobytes()
-                )
+                img = Image.open(io.BytesIO(content)).convert("RGB")
                 
-                new_images.append(img_record)
-                new_embeddings.append(emb_record)
-                saved_paths.append(img_record.image_path)
-                
-                # Update in-memory cache immediately? 
-                # Better to just rebuild/append to cache locally to avoid full reload
-                # But for consistency, let's append to lists
-                
-                if class_name not in self.embeddings_cache:
-                    self.embeddings_cache[class_name] = np.array([vec])
-                    self.image_paths_cache[class_name] = []
-                else:
-                    if len(self.embeddings_cache[class_name]) == 0:
-                         self.embeddings_cache[class_name] = np.array([vec])
-                    else:
-                        self.embeddings_cache[class_name] = np.vstack([self.embeddings_cache[class_name], vec])
-                
-                # Note: ID is not available until flush, but we can append a temporary dict or wait.
-                # Since we don't strictly need ID for similarity search (just index), it's fine.
-                self.image_paths_cache[class_name].append({
-                    "id": None, # Only needed for DB ops
-                    "filename": new_filename,
-                    "path": img_record.image_path
-                })
+                pil_images.append(img)
+                valid_filenames.append(new_filename)
+                raw_contents.append(content)
                 
             except Exception as e:
-                print(f"Skipping file {filename}: {e}")
+                print(f"Skipping corrupt/invalid file {filename}: {e}")
+        
+        if not pil_images:
+            return []
+
+        # 2. Batch Inference
+        try:
+            print("Running batch inference...")
+            embeddings_matrix = self.generate_embeddings_batch(pil_images)
+            print("Inference complete.")
+        except Exception as e:
+            print(f"Bacth inference failed: {e}")
+            raise e
+            
+        # 3. Create Records
+        new_images_records = []
+        new_embedding_records = []
+        
+        # Prepare cache updates (delay until success)
+        cache_update_vectors = []
+        cache_update_paths = []
+        
+        for i, new_filename in enumerate(valid_filenames):
+            content = raw_contents[i]
+            vec = embeddings_matrix[i] # NumPy array
+            
+            img_record = DatasetImage(
+                filename=new_filename,
+                classification=class_name,
+                image_data=content,
+                image_path=f"/images/{class_name}/{new_filename}" 
+            )
+            emb_record = Embedding(
+                classification=class_name,
+                embedding_data=vec.tobytes()
+            )
+            
+            new_images_records.append(img_record)
+            new_embedding_records.append(emb_record)
+            saved_paths.append(img_record.image_path)
+            
+            cache_update_vectors.append(vec)
+            cache_update_paths.append({
+                "id": None, 
+                "filename": new_filename,
+                "path": img_record.image_path
+            })
 
         # 4. Batch Insert
-        if new_images:
+        if new_images_records:
             try:
-                self.db_session.add_all(new_images)
-                self.db_session.add_all(new_embeddings)
+                self.db_session.add_all(new_images_records)
+                self.db_session.add_all(new_embedding_records)
                 self.db_session.commit()
-                print(f"Batch added {len(new_images)} images to {class_name}")
+                print(f"Batch inserted {len(new_images_records)} records into DB.")
+                
+                # 5. Update Cache
+                new_vectors_stacked = np.array(cache_update_vectors)
+                
+                if class_name not in self.embeddings_cache:
+                    self.embeddings_cache[class_name] = new_vectors_stacked
+                    self.image_paths_cache[class_name] = cache_update_paths
+                else:
+                    current_embs = self.embeddings_cache[class_name]
+                    if len(current_embs) == 0:
+                         self.embeddings_cache[class_name] = new_vectors_stacked
+                    else:
+                        self.embeddings_cache[class_name] = np.vstack([current_embs, new_vectors_stacked])
+                    
+                    self.image_paths_cache[class_name].extend(cache_update_paths)
+                    
             except Exception as e:
                 self.db_session.rollback()
-                print(f"Batch insert failed: {e}")
+                print(f"Batch insert failed DB transaction: {e}")
                 raise e
                 
         return saved_paths

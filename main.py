@@ -50,10 +50,14 @@ async def startup_event():
     else:
         print("Database already initialized by startup script")
     print("Initializing MRX SCAN embedding engine...")
-    engine = get_engine()
-    print("Syncing initial data from repo...")
-    engine.sync_initial_data()
-    print("MRX SCAN ready!")
+    try:
+        engine = get_engine()
+        print("Syncing initial data from repo...")
+        engine.sync_initial_data()
+        print("MRX SCAN ready!")
+    except Exception as e:
+        print(f"Startup Error: {e}")
+        # raise e # Don't raise to let us see the output
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
