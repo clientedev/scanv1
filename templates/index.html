@@ -1580,6 +1580,12 @@ img, video, canvas {
             e.preventDefault();
             const name = document.getElementById('folderName').value.trim();
             const status = document.getElementById('createStatus');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            
+            // Disable button
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Criando...';
             
             try {
                 const formData = new FormData();
@@ -1599,6 +1605,8 @@ img, video, canvas {
                     loadFolders();
                     setTimeout(() => {
                         document.getElementById('createFolderModal').classList.remove('active');
+                        status.className = 'status-message';
+                        status.textContent = '';
                     }, 1500);
                 } else {
                     status.className = 'status-message error';
@@ -1607,6 +1615,9 @@ img, video, canvas {
             } catch (err) {
                 status.className = 'status-message error';
                 status.textContent = 'Erro: ' + err.message;
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
             }
         });
 
@@ -1630,12 +1641,18 @@ img, video, canvas {
             const classification = document.getElementById('uploadClass').value;
             const files = document.getElementById('uploadImages').files;
             const status = document.getElementById('uploadStatus');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
             
             if (files.length === 0) {
                 status.className = 'status-message error';
                 status.textContent = 'Selecione pelo menos uma imagem';
                 return;
             }
+            
+            // Disable button and show spinner
+            const originalBtnText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando ' + files.length + ' imagens...';
             
             try {
                 const formData = new FormData();
@@ -1663,6 +1680,9 @@ img, video, canvas {
                     
                     setTimeout(() => {
                         document.getElementById('uploadModal').classList.remove('active');
+                        // Clear status validation
+                        status.className = 'status-message'; 
+                        status.textContent = '';
                     }, 1500);
                 } else {
                     status.className = 'status-message error';
@@ -1671,6 +1691,10 @@ img, video, canvas {
             } catch (err) {
                 status.className = 'status-message error';
                 status.textContent = 'Erro: ' + err.message;
+            } finally {
+                // Restore button state
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
             }
         });
 
